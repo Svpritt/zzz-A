@@ -1,0 +1,32 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  
+  .menu-top {
+    background-color: lightblue;
+    height: 100px; /* Пример высоты меню сверху */
+    min-height: 100px;
+  }
+  
+  .content {
+    display: flex;
+    flex: 1;
+  }
+  
+  .menu-left {
+    background-color: lightgreen;
+    width: 200px; /* Пример ширины меню слева */
+  }
+  
+  .rete-container {
+    flex: 1;
+    position: relative;
+  }
+  
+  .footer {
+    background-color: lightcoral;
+    height: 100px; /* Пример высоты футера */
+  }
+  

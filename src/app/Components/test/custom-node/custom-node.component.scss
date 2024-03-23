@@ -1,0 +1,79 @@
+// :host {
+//     display: block;
+//     background: $node-color;
+//     border: 2px solid #4e58bf;
+//     border-radius: 10px;
+//     cursor: pointer;
+//     box-sizing: border-box;
+//     min-width: $node-width;
+//     height: auto;
+//     padding-bottom: 6px;
+//     position: relative;
+//     user-select: none;
+//     line-height: initial;
+//     font-family: Arial;
+//   }
+  
+//   :host:hover {
+//     background: lighten($node-color, 4%);
+//   }
+  
+//   :host.selected {
+//     background: $node-color-selected;
+//     border-color: #e3c000;
+//   }
+  
+//   .title {
+//     color: white;
+//     font-family: sans-serif;
+//     font-size: 18px;
+//     padding: 8px;
+//   }
+  
+//   .output {
+//     text-align: right;
+//   }
+  
+//   .input {
+//     text-align: left;
+//   }
+  
+//   .input-title,
+//   .output-title {
+//     vertical-align: middle;
+//     color: white;
+//     display: inline-block;
+//     font-family: sans-serif;
+//     font-size: 14px;
+//     margin: $socket-margin;
+//     line-height: $socket-size;
+//   }
+  
+//   .input-title[hidden],
+//   .output-title[hidden] {
+//     display: none;
+//   }
+  
+//   .output-socket {
+//     text-align: right;
+//     margin-right: -(math.div($socket-size, 2) + $socket-margin);
+//     display: inline-block;
+//   }
+  
+//   .input-socket {
+//     text-align: left;
+//     margin-left: -(math.div($socket-size, 2) + $socket-margin);
+//     display: inline-block;
+//   }
+  
+//   .input-control {
+//     z-index: 1;
+//     width: calc(100% - #{$socket-size + 2*$socket-margin});
+//     vertical-align: middle;
+//     display: inline-block;
+//   }
+  
+//   .control {
+//     padding: $socket-margin math.div($socket-size, 2) + $socket-margin;
+//   }
+  
