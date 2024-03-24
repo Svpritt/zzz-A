@@ -1,6 +1,7 @@
 // Ваш компонент, из которого вы хотите вызвать метод addNewNode()
 
 import { Component } from '@angular/core';
+import { EditorService } from './Components/test/editorControl.service';
 
 @Component({
   selector: 'app-root',
@@ -9,10 +10,12 @@ import { Component } from '@angular/core';
 
 })
 export class AppComponent {
-  constructor() {} 
+  constructor(private editorService: EditorService) {} 
   
   addOnClick() {
     // Вызываем метод addNewNode() из инжектированного сервиса MyEditor
     // this.myEditor.addNewNode();
+    this.editorService.addNewNode();
+
   }
 }
