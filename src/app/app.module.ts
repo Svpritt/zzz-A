@@ -7,6 +7,8 @@ import { AppComponent } from "./app.component";
 
 import { TestComponent } from "./Components/test/test.component";
 import { CustomNodeComponent } from './Components/test/custom-node/custom-node.component';
+import { MyEditor } from "./Components/test/editor";
+
 
 @NgModule({
   declarations: [
@@ -16,7 +18,9 @@ import { CustomNodeComponent } from './Components/test/custom-node/custom-node.c
 
   ],
   imports: [BrowserModule, CommonModule, ReteModule],
-  providers: [],
-  bootstrap: [AppComponent],
+  providers: [
+    MyEditor
+
+  ],  bootstrap: [AppComponent],
 })
 export class AppModule {}
