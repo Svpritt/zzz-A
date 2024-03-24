@@ -6,6 +6,7 @@ import {
   Injector,
 } from "@angular/core";
 import { MyEditor } from "./editor";
+import { EditorService } from "./editorControl.service";
 
 @Component({
   selector: 'app-test',
@@ -16,25 +17,19 @@ export class TestComponent implements AfterViewInit {
 
   title = "sucksuck";
 
-  constructor(private injector: Injector) {
+  constructor(private editorService: EditorService) {}
     
-  }
   @ViewChild("rete") container!: ElementRef;
 
   async ngAfterViewInit() {
     const el = this.container.nativeElement;
 
     if (el) {
-     const Editor = new MyEditor(el, this.injector);
-
-      Editor.createEditor();
-      await Editor.addNewNode();
-      
-      await Editor.addControl();
-      
-
-      //await Editor.addNewNode();
+      this.editorService.createEditor(el);
+      await this.editorService.addNewNode();
+      await this.editorService.addControl();
     }
   }
+  
   
 }

@@ -8,13 +8,19 @@ export class EditorService {
 
     constructor(private injector: Injector) {}
 
-  myEditor: MyEditor | undefined;
+    private editor!: MyEditor;
 
-  newEx(){
-    const el = this.container.nativeElement;
+  createEditor(el: HTMLElement) {
+    this.editor = new MyEditor(el, this.injector);
+    this.editor.createEditor();
+    
   }
-
-  createEditor(container: HTMLElement): void {
-    this.myEditor = new MyEditor(container, this.injector);
+  addNewNode() {
+    this.editor.addNewNode();
   }
+  
+  addControl() {
+    this.editor.addControl();
+  }
+  
 }
