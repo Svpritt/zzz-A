@@ -6,7 +6,7 @@ import {
   Injector,
 } from "@angular/core";
 import { MyEditor } from "./editor";
-import { EditorService } from "./editorControl.service";
+import { EditorControlService } from "./editorControl.service";
 
 @Component({
   selector: 'app-test',
@@ -17,7 +17,7 @@ export class TestComponent implements AfterViewInit {
 
   title = "sucksuck";
 
-  constructor(private editorService: EditorService) {}
+  constructor(private editorService: EditorControlService) {}
     
   @ViewChild("rete") container!: ElementRef;
 
@@ -25,7 +25,7 @@ export class TestComponent implements AfterViewInit {
     const el = this.container.nativeElement;
 
     if (el) {
-      this.editorService.createEditor(el);
+      await this.editorService.createEditor(el);
       await this.editorService.addNewNode();
       await this.editorService.addControl();
     }

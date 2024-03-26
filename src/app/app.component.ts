@@ -1,7 +1,10 @@
 // Ваш компонент, из которого вы хотите вызвать метод addNewNode()
 
 import { Component } from '@angular/core';
-import { EditorService } from './Components/test/editorControl.service';
+import { EditorControlService } from './Components/test/editorControl.service';
+import { SocketComponent } from 'rete-angular-plugin';
+import { ClassicPreset } from 'rete';
+
 
 @Component({
   selector: 'app-root',
@@ -10,11 +13,14 @@ import { EditorService } from './Components/test/editorControl.service';
 
 })
 export class AppComponent {
-  constructor(private editorService: EditorService) {} 
+  constructor(private editorService: EditorControlService) {} 
   
   addOnClick() {
     // Вызываем метод addNewNode() из инжектированного сервиса MyEditor
     // this.myEditor.addNewNode();
+    // const socket = new ClassicPreset.Socket("socket");
+    // const socket = new ClassicPreset.Socket("socket"); // Создание экземпляра socket
+
     this.editorService.addNewNode();
 
   }
