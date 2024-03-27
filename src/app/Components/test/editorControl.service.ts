@@ -14,9 +14,7 @@ type Schemes = GetSchemes<
 export class EditorControlService {
 
     constructor(private injector: Injector) {
-
     }
-    // nodes: ClassicPreset.Node[] = [];
 
     private editor!: MyEditor;
 
@@ -25,10 +23,6 @@ export class EditorControlService {
     
     
     await this.editor.createEditor();
-    
- 
-  
-    // this.editor.addControl();
   }
   
   addNewNode() {
@@ -37,6 +31,10 @@ export class EditorControlService {
   
   addControl() {
     return this.editor.addControl();
+  }
+
+  addButton(){
+    return this.editor.addButton();
   }
   
   

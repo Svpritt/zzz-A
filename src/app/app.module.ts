@@ -7,15 +7,17 @@ import { AppComponent } from "./app.component";
 
 import { TestComponent } from "./Components/test/test.component";
 import { MyEditor } from "./Components/test/editor";
+import { ButtonComponent } from "./Components/test/dockNodes/custom-button.component";
 
 
 @NgModule({
   declarations: [
     AppComponent,
     TestComponent,
+    ButtonComponent,
 
   ],
-  imports: [BrowserModule, CommonModule, ReteModule],
+  imports: [BrowserModule, CommonModule, ReteModule,],
   providers: [
     MyEditor
 

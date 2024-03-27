@@ -16,12 +16,12 @@ export class AppComponent {
   constructor(private editorService: EditorControlService) {} 
   
   addOnClick() {
-    // Вызываем метод addNewNode() из инжектированного сервиса MyEditor
-    // this.myEditor.addNewNode();
-    // const socket = new ClassicPreset.Socket("socket");
-    // const socket = new ClassicPreset.Socket("socket"); // Создание экземпляра socket
-
     this.editorService.addNewNode();
-
+  }
+  addControltoSelectNode(){
+    this.editorService.addControl();
+  }
+  addRemoveBtn() {
+    this.editorService.addButton();
   }
 }

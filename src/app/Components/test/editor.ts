@@ -8,7 +8,7 @@ import {
   ConnectionPlugin,
   Presets as ConnectionPresets
 } from "rete-connection-plugin";
-import { AngularPlugin, Presets, AngularArea2D } from "rete-angular-plugin/15";
+import { AngularPlugin, Presets, AngularArea2D, ControlComponent } from "rete-angular-plugin/15";
 import { DockPlugin, DockPresets } from "rete-dock-plugin";
 
 import { NodeA } from "./dockNodes/nodeA";
@@ -21,6 +21,8 @@ import {
   ContextMenuPlugin,
   Presets as ContextMenuPresets
 } from "rete-context-menu-plugin";
+import { ButtonComponent, ButtonControl } from "./dockNodes/custom-button.component";
+
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -32,8 +34,6 @@ type AreaExtra = AngularArea2D<Schemes> | ContextMenuExtra;
   providedIn: 'root'
 }) 
 export class MyEditor {
-
- 
 
   constructor(
     // private elementRef: ElementRef,
@@ -70,14 +70,12 @@ export class MyEditor {
     })
 
     this.render.addPreset(Presets.classic.setup());
-
     this.connection.addPreset(ConnectionPresets.classic.setup());
-
-    
 
     //оберка вогру Компонента чтоб создать на его основе нод
     this.render.addPreset(Presets.contextMenu.setup());
     this.editor.use(this.area);
+    
     this.area.use(this.connection);
     this.area.use(this.render);
     this.area.use(this.dock);
@@ -92,12 +90,25 @@ export class MyEditor {
 
     AreaExtensions.zoomAt(this.area, this.editor.getNodes());
    
-  
+   this.render.addPreset(Presets.classic.setup({
+    customize: {
+      control(context) {
+        if (context.payload.id) {
+          return ButtonComponent
+        }
+        if (context.payload instanceof ClassicPreset.InputControl) { 
+          return ControlComponent
+        }
+        return null
+      }
+    }
+   }))
 
     return () => this.area.destroy();
   }
   public async addNewNode() {
     const node = this.nodeCreatorService.createCustomNode(this.socket);
+    
     this.nodes = [...this.nodes, node];
     if(node.selected !== undefined){
       console.log(node.selected.valueOf());
@@ -106,47 +117,50 @@ export class MyEditor {
     await this.editor.addNode(node);
   }
   public async addControl() {  //Пример контрола по идее на каждый "обькт " свой
-    const node = this.nodes[0];// указать ноду которая выбрана
-    node.addControl("ab", new ClassicPreset.InputControl("text", {initial: "hellow"}));
+    const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 
+                                                                      // максимум 1 нода есть более простой способ ее получить. я его не нашел.
+    
+    if(node !== undefined){
+      console.log(node[0].id); //не сразу понял что node это список из 1 экземпляра он всего []
+      const node1 = node[0]
+      node1.addControl("ab", new ClassicPreset.InputControl("text", {initial: "WTF"}));
+      this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
+    }
 
-    this.area.update('node', node.id); //обновление
   }
+  public async addButton(){
+      const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 
+      // максимум 1 нода есть более простой способ ее получить. я его не нашел.
+
+      if(node !== undefined){
+      console.log(node[0].id); 
+      const node1 = node[0]
+      node1.addControl("button", //этот метод написан не верно, пока не понимаю почему, что-то происходит в окне но нет кнпоки.
+      new ButtonControl("Delete", () => {
+      
+        console.log("Кнопка нажата"); //не вижу консоль (вижу упдейт спустя 30 минут)
+        this.area.removeNodeView(node1.id) //можно было бы вызвать метод DeleteNode но он удалит не эту ноду, а ту которая будет выделена.
+                                            //у этой ноды свой node1.id константа у каждого метода своя.
+      })
+      );
+
+      this.area.update("control", node1.id)
+      this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
+      }
+  }
+
+  public async DeleteNode() {  //Пример контрола по идее на каждый "обькт " свой
+    const node = this.editor.getNodes().filter(node => node.selected) 
+    
+    if(node !== undefined){
+      console.log(node[0].id); //не сразу понял что node это список из 1 экземпляра он всего []
+      const node1 = node[0]
+      this.area.removeNodeView(node1.id) //метода работает, но не работае в кнопке которую я создаю
+      this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
+    }
+
+  }
+
 }
 
 
-  
-// public async addNewNode1() { //можно ли вынести в сервис, который встoрится в editorControl
-  //   function createCustomNode(socket: ClassicPreset.Socket): ClassicPreset.Node {
-  //     const customNode = new ClassicPreset.Node('CustomNodeLabel'); // Создание экземпляра узла с меткой 'CustomNodeLabel'
-  //     customNode.addControl("a", new ClassicPreset.InputControl("text", {initial: "first"})); // Добавление контроля
-  //     customNode.addOutput("a", new ClassicPreset.Output(socket)); // Добавление выхода
-  //     // Добавляем метод для удаления выхода
-  //     customNode.removeOutput = function(key: keyof ClassicPreset.Node['outputs']): void {
-  //       delete this.outputs[key];
-  //     };
-  //     // Добавляем метод для добавления контрола
-  //     customNode.addControl = function<K extends keyof ClassicPreset.Node['controls']>(key: K, control: ClassicPreset.Node['controls'][K]): void {
-  //       this.controls[key] = control;
-  //     };
-    
-  //     return customNode; // Возвращение созданного узла
-  //   }
-  //   const node = createCustomNode(this.socket);
-  //   this.nodes = [...this.nodes, node];
-  //   await this.editor.addNode(node);
-  // }
-
-  // const editor : NodeEditor<Schemes>();
-  // const area = new AreaPlugin<Schemes, AreaExtra>(container);
-  // const connection = new ConnectionPlugin<Schemes, AreaExtra>();
-  // const render = new AngularPlugin<Schemes, AreaExtra>({ injector });
-  // const dock = new DockPlugin<Schemes>();
-
-  
-  //this.dock.add(() => createCustomNode(this.socket));
-  //createCustomNode(this.socket);
-
-// public updateNode(node: ClassicPreset.Node) {
-//   this.render.updateNode(node); // Обновление рендеринга узла
-//   this.area.trigger('render'); // Принудительное обновление отрисовки области
-// }
