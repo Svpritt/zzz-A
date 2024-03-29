@@ -24,4 +24,8 @@ export class AppComponent {
   addRemoveBtn() {
     this.editorService.addButton();
   }
+  addImage(){
+    this.editorService.addImage();
+  }
+
 }

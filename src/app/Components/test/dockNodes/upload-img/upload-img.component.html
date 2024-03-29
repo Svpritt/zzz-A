@@ -1,0 +1,4 @@
+<div>
+    <input type="file" id="img" (change)="onFileSelected($event, this)" accept="image/*" />
+    <img *ngIf="Url" [src]="Url" alt="Uploaded Image" style="width:100px; height:100px"/>
+  </div>

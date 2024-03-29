@@ -1,6 +1,5 @@
 
-import {  ElementRef, Injector } from "@angular/core";
-import { Injectable } from '@angular/core';
+import { Injector, Injectable } from "@angular/core";
 
 import { NodeEditor, GetSchemes, ClassicPreset } from "rete";
 import { AreaPlugin, AreaExtensions } from "rete-area-plugin";
@@ -22,7 +21,9 @@ import {
   Presets as ContextMenuPresets
 } from "rete-context-menu-plugin";
 import { ButtonComponent, ButtonControl } from "./dockNodes/custom-button.component";
-
+import { ImageComponent, ImageControl } from "./dockNodes/custmon-img.component";
+import { CustomNodeComponent } from "./dockNodes/custom-node/custom-node.component";
+import { ImageService } from "src/app/services/imgUrl.service";
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -36,10 +37,10 @@ type AreaExtra = AngularArea2D<Schemes> | ContextMenuExtra;
 export class MyEditor {
 
   constructor(
-    // private elementRef: ElementRef,
     container: HTMLElement,
-    injector: Injector,
-    private nodeCreatorService: NodeCreatorService // Внедрение NodeCreatorService
+    private injector: Injector,
+    private nodeCreatorService: NodeCreatorService, // Внедрение NodeCreatorService
+    private imageService: ImageService
     )
   {
      this.socket = new ClassicPreset.Socket("socket");
@@ -56,13 +57,16 @@ export class MyEditor {
   connection : ConnectionPlugin<Schemes, AreaExtra>;
   render : AngularPlugin<Schemes, AreaExtra>;
   dock : DockPlugin<Schemes>;
-
   nodes: ClassicPreset.Node[] = [];
+
+  getImageUrl() {
+    return this.imageService.imageUrl$;
+  }
+
 
   public async  createEditor() {
     const contextMenu = new ContextMenuPlugin<Schemes>({items: ContextMenuPresets.classic.setup([])})
     
-
     this.dock.addPreset(DockPresets.classic.setup({ area:this.area , size: 100, scale: 0.6 }));
 
     AreaExtensions.selectableNodes(this.area, AreaExtensions.selector(), {
@@ -71,11 +75,10 @@ export class MyEditor {
 
     this.render.addPreset(Presets.classic.setup());
     this.connection.addPreset(ConnectionPresets.classic.setup());
-
     //оберка вогру Компонента чтоб создать на его основе нод
     this.render.addPreset(Presets.contextMenu.setup());
     this.editor.use(this.area);
-    
+
     this.area.use(this.connection);
     this.area.use(this.render);
     this.area.use(this.dock);
@@ -86,33 +89,38 @@ export class MyEditor {
     this.dock.add(()=> new MyCustomNode(this.socket))
 
     
+    
     AreaExtensions.simpleNodesOrder(this.area);
-
     AreaExtensions.zoomAt(this.area, this.editor.getNodes());
    
    this.render.addPreset(Presets.classic.setup({
     customize: {
-      control(context) {
-        if (context.payload.id) {
-          return ButtonComponent
+      // node() {
+      //   return CustomNodeComponent;
+      // },
+        control(context) {
+          if (context.payload instanceof ImageControl) {
+            return ImageComponent; // Повертаємо компонент ImageComponent
+          }
+
+        if (context.payload instanceof ButtonControl) {
+          return ButtonComponent;
         }
-        if (context.payload instanceof ClassicPreset.InputControl) { 
-          return ControlComponent
-        }
+       
         return null
       }
-    }
-   }))
+   }}));
+   
 
     return () => this.area.destroy();
   }
+
+  
   public async addNewNode() {
     const node = this.nodeCreatorService.createCustomNode(this.socket);
-    
     this.nodes = [...this.nodes, node];
     if(node.selected !== undefined){
       console.log(node.selected.valueOf());
-
     }
     await this.editor.addNode(node);
   }
@@ -123,7 +131,7 @@ export class MyEditor {
     if(node !== undefined){
       console.log(node[0].id); //не сразу понял что node это список из 1 экземпляра он всего []
       const node1 = node[0]
-      node1.addControl("ab", new ClassicPreset.InputControl("text", {initial: "WTF"}));
+      node1.addControl("ab", new ClassicPreset.InputControl("text", {initial: "WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 "}));
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
     }
 
@@ -131,19 +139,16 @@ export class MyEditor {
   public async addButton(){
       const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 
       // максимум 1 нода есть более простой способ ее получить. я его не нашел.
-
       if(node !== undefined){
       console.log(node[0].id); 
       const node1 = node[0]
       node1.addControl("button", //этот метод написан не верно, пока не понимаю почему, что-то происходит в окне но нет кнпоки.
       new ButtonControl("Delete", () => {
-      
         console.log("Кнопка нажата"); //не вижу консоль (вижу упдейт спустя 30 минут)
         this.area.removeNodeView(node1.id) //можно было бы вызвать метод DeleteNode но он удалит не эту ноду, а ту которая будет выделена.
-                                            //у этой ноды свой node1.id константа у каждого метода своя.
+                                          //у этой ноды свой node1.id константа у каждого метода своя.
       })
       );
-
       this.area.update("control", node1.id)
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
       }
@@ -160,6 +165,32 @@ export class MyEditor {
     }
 
   }
+
+  public async addImageComponent(){
+    const selectedNode = this.editor.getNodes().find(node => node.selected);
+    console.log(this.imageService.imageUrl)
+    console.log(this.imageService.imageUrl$)
+    this.imageService.imageUrl$.subscribe(imageUrl => {
+      console.log("Current image URL:", imageUrl);
+    });
+    if (selectedNode){
+      console.log(selectedNode.id);
+      console.log(this.imageService.imageUrl)
+      console.log(this.imageService.imageUrl$)
+
+     const data ="1"
+     //this.imageService.imageUrl$;
+     console.log(data)
+      const control = new ImageControl(data); // Передаем data в ImageControl
+      selectedNode.addControl("image", control);
+      this.area.update("node", selectedNode.id);
+      this.area.update("control", control.id); // Назначаем компонент для контрола
+    }
+}
+
+
+  
+
 
 }
 
