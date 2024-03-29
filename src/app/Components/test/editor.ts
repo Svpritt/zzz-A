@@ -9,11 +9,9 @@ import {
 } from "rete-connection-plugin";
 import { AngularPlugin, Presets, AngularArea2D, ControlComponent } from "rete-angular-plugin/15";
 import { DockPlugin, DockPresets } from "rete-dock-plugin";
-
 import { NodeA } from "./dockNodes/nodeA";
 import { NodeB } from "./dockNodes/nodeB";
 import { MyCustomNode } from "./dockNodes/CustomNode";
-
 import { NodeCreatorService } from './node-creator.service';
 import {
   ContextMenuExtra,
@@ -24,6 +22,8 @@ import { ButtonComponent, ButtonControl } from "./dockNodes/custom-button.compon
 import { ImageComponent, ImageControl } from "./dockNodes/custmon-img.component";
 import { CustomNodeComponent } from "./dockNodes/custom-node/custom-node.component";
 import { ImageService } from "src/app/services/imgUrl.service";
+import { TextStateService } from "src/app/services/text-state.service";
+import { TextBoxComponent, TextControl } from "./dockNodes/text-box/text-box.component";
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -40,7 +40,8 @@ export class MyEditor {
     container: HTMLElement,
     private injector: Injector,
     private nodeCreatorService: NodeCreatorService, // Внедрение NodeCreatorService
-    private imageService: ImageService
+    private imageService: ImageService,
+    private textStateService: TextStateService
     )
   {
      this.socket = new ClassicPreset.Socket("socket");
@@ -58,11 +59,6 @@ export class MyEditor {
   render : AngularPlugin<Schemes, AreaExtra>;
   dock : DockPlugin<Schemes>;
   nodes: ClassicPreset.Node[] = [];
-
-  // getImageUrl() {
-  //   return this.imageService.imageUrl$;
-  // }
-
 
   public async  createEditor() {
     const contextMenu = new ContextMenuPlugin<Schemes>({items: ContextMenuPresets.classic.setup([])})
@@ -99,6 +95,10 @@ export class MyEditor {
       //   return CustomNodeComponent;
       // },
         control(context) {
+          if(context.payload instanceof TextControl){
+            return TextBoxComponent;
+          }
+
           if (context.payload instanceof ImageControl) {
             return ImageComponent; // Повертаємо компонент ImageComponent
           }
@@ -172,12 +172,6 @@ export class MyEditor {
   public async addImageComponent(){
     const selectedNode = this.editor.getNodes().find(node => node.selected);
     console.log(this.imageService.getImgUrl())
-    // console.log(this.imageService.imageUrl$)
-    // this.imageService.imageUrl$.subscribe(imageUrl => {
-    //   console.log("Current image URL:", imageUrl);
-    // });
-   
-    
     if (selectedNode){
 
       console.log(selectedNode.id);
@@ -197,7 +191,29 @@ export class MyEditor {
 }
 
 
-  
+public async addTextBoxComponent(){
+  const selectedNode = this.editor.getNodes().find(node => node.selected);
+  console.log(this.textStateService.getText())
+  // if (selectedNode){
+
+  if (selectedNode){
+    const text = this.textStateService.getText();
+    const control =  new TextControl(text);
+
+    selectedNode.addControl("TextBox", control);
+    this.area.update("node", selectedNode.id)
+  }
+  //  const data = this.imageService.getImgUrl();
+  //  //this.imageService.imageUrl$;
+  //  console.log(data)
+  //   const control = new ImageControl(data); // Передаем data в ImageControl
+  //   selectedNode.removeControl("image");
+
+  //   selectedNode.addControl("image", control);
+  //   this.area.update("node", selectedNode.id);
+  //   this.area.update("control", control.id); // Назначаем компонент для контрола
+  // }
+}
 
 
 }

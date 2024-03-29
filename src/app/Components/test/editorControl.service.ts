@@ -4,6 +4,7 @@ import {GetSchemes, ClassicPreset} from "rete"
 import { classic } from 'rete-angular-plugin/presets';
 import { NodeCreatorService } from './node-creator.service';
 import { ImageService } from 'src/app/services/imgUrl.service';
+import { TextStateService } from 'src/app/services/text-state.service';
 type Schemes = GetSchemes<
   ClassicPreset.Node,
   ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node>
@@ -27,7 +28,7 @@ export class EditorControlService {
 
 
 
-    this.editor = new MyEditor(el, this.injector, new NodeCreatorService(), new ImageService());
+    this.editor = new MyEditor(el, this.injector, new NodeCreatorService(), new ImageService(), new TextStateService());
 
     await this.editor.createEditor();
   }
@@ -48,6 +49,9 @@ export class EditorControlService {
     return this.editor.addImageComponent();
   }
 
+  addText(){
+    return this.editor.addTextBoxComponent();
+  }
   
   
   

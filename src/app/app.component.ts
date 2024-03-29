@@ -27,5 +27,8 @@ export class AppComponent {
   addImage(){
     this.editorService.addImage();
   }
+  addText(){
+    this.editorService.addText();
+  }
 
 }

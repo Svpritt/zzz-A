@@ -13,6 +13,9 @@ import { ImageComponent } from "./Components/test/dockNodes/custmon-img.componen
 import { CustomNodeComponent } from "./Components/test/dockNodes/custom-node/custom-node.component";
 import { UploadImgComponent } from "./Components/test/dockNodes/upload-img/upload-img.component";
 import { ImageService } from "./services/imgUrl.service";
+import { TextBoxComponent } from './Components/test/dockNodes/text-box/text-box.component';
+import { UploadTextComponent } from './Components/test/dockNodes/upload-text/upload-text.component';
+import { FormsModule } from "@angular/forms";
 @NgModule({
   declarations: [
     AppComponent,
@@ -20,10 +23,17 @@ import { ImageService } from "./services/imgUrl.service";
     ButtonComponent,
     ImageComponent,
     CustomNodeComponent,
-    UploadImgComponent
+    UploadImgComponent,
+    TextBoxComponent,
+    UploadTextComponent
     
   ],
-  imports: [BrowserModule, CommonModule, ReteModule,],
+  imports: [
+    BrowserModule,
+    CommonModule,
+    ReteModule,
+    FormsModule
+  ],
   providers: [
     MyEditor,
     ImageService
