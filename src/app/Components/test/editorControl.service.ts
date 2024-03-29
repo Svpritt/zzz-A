@@ -28,8 +28,6 @@ export class EditorControlService {
 
 
     this.editor = new MyEditor(el, this.injector, new NodeCreatorService(), new ImageService());
-    console.log(this.editor.getImageUrl());
-    this.imageService.imageUrl$.toPromise();
 
     await this.editor.createEditor();
   }

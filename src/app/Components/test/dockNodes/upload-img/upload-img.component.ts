@@ -23,21 +23,20 @@ export class UploadImgComponent {
         reader.onload = (e: ProgressEvent<FileReader>) => {
           const target = e.target as FileReader;
           component.Url = target.result as string;
-          this.imageService.imageUrl = component.Url; // Используйте imageUrl вместо set
-
-          // Записываем данные в сервис
-
+          this.imageService.setImgUrl(component.Url)
           console.log("Image loaded successfully");
-          console.log("Image URL from service:", this.imageService.imageUrl$);
-          this.imageService.imageUrl$.subscribe(imageUrl => {
-            console.log("Current image URL:", imageUrl);
-          });
+          console.log("Image URL from service:", this.imageService);
+       
         };
-
-
         reader.readAsDataURL(file);
       }
   
     
   }
 
+   // this.imageService.imageUrl$.subscribe(imageUrl => {
+          //   console.log("Current image URL:", imageUrl);
+          // });
+                    // this.imageService.imageUrl = component.Url; // Используйте imageUrl вместо set
+
+          // Записываем данные в сервис

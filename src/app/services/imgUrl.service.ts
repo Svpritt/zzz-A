@@ -6,20 +6,36 @@ import { BehaviorSubject, Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class ImageService {
-  private _imageUrl: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+  private static imgUrl: string | null = null;
 
-  get imageUrl$(): Observable<string | null> {
-    return this._imageUrl.asObservable();
+  constructor() {}
+
+  setImgUrl(url: string | null): void {
+    ImageService.imgUrl = url;
   }
 
-
-
-  set imageUrl(value: string | null) {
-    this._imageUrl.next(value);
+  getImgUrl(): string | null {
+    return ImageService.imgUrl;
   }
-
-  get imageUrl(): string | null {
-    return this._imageUrl.getValue();
-  }
-
 }
+
+
+
+
+
+
+// private _imageUrl: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+
+// get imageUrl$(): Observable<string | null> {
+//   return this._imageUrl.asObservable();
+// }
+
+
+
+// set imageUrl(value: string | null) {
+//   this._imageUrl.next(value);
+// }
+
+// get imageUrl(): string | null {
+//   return this._imageUrl.getValue();
+// }

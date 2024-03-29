@@ -59,9 +59,9 @@ export class MyEditor {
   dock : DockPlugin<Schemes>;
   nodes: ClassicPreset.Node[] = [];
 
-  getImageUrl() {
-    return this.imageService.imageUrl$;
-  }
+  // getImageUrl() {
+  //   return this.imageService.imageUrl$;
+  // }
 
 
   public async  createEditor() {
@@ -156,10 +156,13 @@ export class MyEditor {
 
   public async DeleteNode() {  //Пример контрола по идее на каждый "обькт " свой
     const node = this.editor.getNodes().filter(node => node.selected) 
+
+
     
     if(node !== undefined){
       console.log(node[0].id); //не сразу понял что node это список из 1 экземпляра он всего []
       const node1 = node[0]
+
       this.area.removeNodeView(node1.id) //метода работает, но не работае в кнопке которую я создаю
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
     }
@@ -168,20 +171,25 @@ export class MyEditor {
 
   public async addImageComponent(){
     const selectedNode = this.editor.getNodes().find(node => node.selected);
-    console.log(this.imageService.imageUrl)
-    console.log(this.imageService.imageUrl$)
-    this.imageService.imageUrl$.subscribe(imageUrl => {
-      console.log("Current image URL:", imageUrl);
-    });
+    console.log(this.imageService.getImgUrl())
+    // console.log(this.imageService.imageUrl$)
+    // this.imageService.imageUrl$.subscribe(imageUrl => {
+    //   console.log("Current image URL:", imageUrl);
+    // });
+   
+    
     if (selectedNode){
-      console.log(selectedNode.id);
-      console.log(this.imageService.imageUrl)
-      console.log(this.imageService.imageUrl$)
 
-     const data ="1"
+      console.log(selectedNode.id);
+      console.log(this.imageService)
+      console.log(this.imageService)
+
+     const data = this.imageService.getImgUrl();
      //this.imageService.imageUrl$;
      console.log(data)
       const control = new ImageControl(data); // Передаем data в ImageControl
+      selectedNode.removeControl("image");
+
       selectedNode.addControl("image", control);
       this.area.update("node", selectedNode.id);
       this.area.update("control", control.id); // Назначаем компонент для контрола

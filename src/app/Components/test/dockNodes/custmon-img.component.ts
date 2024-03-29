@@ -10,6 +10,7 @@ export class ImageControl extends ClassicPreset.Control {
   constructor(public imageUrl: string | null) {
     super();
     // imageUrl: null;
+    //сюда нужно передать значение img URL
   }
 }
 
@@ -17,26 +18,26 @@ export class ImageControl extends ClassicPreset.Control {
   selector: "app-image-component",
   template: `
   <div>
-    <img *ngIf="imageUrl" [src]="imageUrl" alt="Uploaded Image" style="width:100px; height:100px"/>
+    <img *ngIf="data.imageUrl" [src]="data.imageUrl" alt="Uploaded Image" style="width:100px; height:100px"/>
 </div>
 
      `
 })
-export class ImageComponent implements OnInit{
+export class ImageComponent {
   // implements OnInit
   // imageUrl: string | null = null;
   @Input() data!: ImageControl; //ошибка, поставил ! думаю дата по другому сюда не попадет.
 
-  constructor(private imageService: ImageService) {}
+  // constructor(private imageService: ImageService) {}
 
-  ngOnInit() {
-    console.log(this.data)
-    this.imageService.imageUrl$.subscribe(url => {
-      this.imageUrl = url;
-    });
+  // ngOnInit() {
+  //   console.log(this.data)
+  //   this.imageService.imageUrl$.subscribe(url => {
+  //     this.imageUrl = url;
+  //   });
 
-  }
-  imageUrl: string | null = null;
+  // }
+  // imageUrl: string | null = null;
 
   // constructor() {}
 
