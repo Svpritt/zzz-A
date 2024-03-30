@@ -26,6 +26,7 @@ export class AppComponent {
   }
   addImage(){
     this.editorService.addImage();
+    console.log(this.editorService.log())
   }
   addText(){
     this.editorService.addText();

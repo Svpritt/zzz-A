@@ -26,6 +26,7 @@ export class TestComponent implements AfterViewInit {
 
     if (el) {
       await this.editorService.createEditor(el);
+      
       // await this.editorService.addNewNode();
       // await this.editorService.addControl();
     }

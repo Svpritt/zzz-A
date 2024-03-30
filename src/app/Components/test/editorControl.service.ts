@@ -5,6 +5,7 @@ import { classic } from 'rete-angular-plugin/presets';
 import { NodeCreatorService } from './node-creator.service';
 import { ImageService } from 'src/app/services/imgUrl.service';
 import { TextStateService } from 'src/app/services/text-state.service';
+
 type Schemes = GetSchemes<
   ClassicPreset.Node,
   ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node>
@@ -27,14 +28,17 @@ export class EditorControlService {
   async createEditor(el: HTMLElement) {
 
 
-
     this.editor = new MyEditor(el, this.injector, new NodeCreatorService(), new ImageService(), new TextStateService());
-
     await this.editor.createEditor();
+    
+  }
+
+  log(){
+    return     this.editor.area.area.content.holder  //возразает HTML со всем контентом... хз как это использовать. оставлю пока тут
   }
   
   addNewNode() {
-    return this.editor.addNewNode();
+    return   this.editor.addNewNode();
   }
   
   addControl() {
