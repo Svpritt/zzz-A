@@ -22,18 +22,20 @@ export class EditorControlService {
     private imageService: ImageService // Внедрите ImageService
     ) {
     }
-
     private editor!: MyEditor;
 
   async createEditor(el: HTMLElement) {
 
-
     this.editor = new MyEditor(el, this.injector, new NodeCreatorService(), new ImageService(), new TextStateService());
+    
     await this.editor.createEditor();
     
   }
 
+ 
+
   log(){
+    
     return     this.editor.area.area.content.holder  //возразает HTML со всем контентом... хз как это использовать. оставлю пока тут
   }
   

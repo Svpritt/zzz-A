@@ -5,8 +5,8 @@ import {
   ElementRef,
   Injector,
 } from "@angular/core";
-import { MyEditor } from "./editor";
 import { EditorControlService } from "./editorControl.service";
+
 
 @Component({
   selector: 'app-test',
@@ -26,11 +26,19 @@ export class TestComponent implements AfterViewInit {
 
     if (el) {
       await this.editorService.createEditor(el);
-      
-      // await this.editorService.addNewNode();
-      // await this.editorService.addControl();
+      document.addEventListener('nodepicked', (event: Event) => {
+        // Обработка события nodepicked
+        console.log('Node picked event:', (event as CustomEvent).detail);
+    });
+    
     }
   }
+  handleNodePicked(event: CustomEvent) {
+    // Обработка события nodepicked
+    console.log('Node picked event:', event.detail);
+  }
+
+
   
   
 }

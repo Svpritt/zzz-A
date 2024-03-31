@@ -2,8 +2,9 @@
 import { Injector, Injectable } from "@angular/core";
 
 import { NodeEditor, GetSchemes, ClassicPreset } from "rete";
-import { AreaPlugin, AreaExtensions } from "rete-area-plugin";
+import { AreaPlugin, AreaExtensions, } from "rete-area-plugin";
 import {
+  ClassicFlow,
   ConnectionPlugin,
   Presets as ConnectionPresets
 } from "rete-connection-plugin";
@@ -25,11 +26,10 @@ import { ImageService } from "src/app/services/imgUrl.service";
 import { TextStateService } from "src/app/services/text-state.service";
 import { TextBoxComponent, TextControl } from "./dockNodes/text-box/text-box.component";
 import { NodeId, Root } from 'rete';
+import { Signal, Pipe, Scope } from 'rete';
 
 
-
-
-
+// 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
   
@@ -56,7 +56,15 @@ export class MyEditor {
      this.connection = new ConnectionPlugin<Schemes, AreaExtra>();
      this.render = new AngularPlugin<Schemes, AreaExtra>({ injector });
      this.dock = new DockPlugin<Schemes>();
+
+     // Установка слушателя события nodepicked
+    // this.selector.isPicked.addEventListener('nodepicked', this.handleNodePicked.bind(this));
+
   } 
+  // private handleNodePicked(event: CustomEvent) {
+  //   // Обработка события nodepicked
+  //   console.log('Node picked event:', event.detail);
+  // }
   
   socket : ClassicPreset.Socket;
   editor : NodeEditor<Schemes>;
@@ -67,6 +75,7 @@ export class MyEditor {
   nodes: ClassicPreset.Node[] = [];
   selector = AreaExtensions.selector();
   accumulating = AreaExtensions.accumulateOnCtrl()
+
 
 
   public async  createEditor() {
@@ -94,7 +103,29 @@ export class MyEditor {
     this.dock.add(() => new NodeA(this.socket));
     this.dock.add(() => new NodeB(this.socket));
     this.dock.add(()=> new MyCustomNode(this.socket))
-   
+    this.area.addPipe(context => { // Добавление обработчика событий в область редактора
+      if (context.type === 'nodepicked') { // Проверка типа события
+        const pickedId = context.data.id; // Получение id выбранного узла из данных события
+       console.log(pickedId)
+       console.log(       this.editor.getNode(pickedId) //нужно проверить как достать данные из контролов.
+       )
+      }
+      return context; // Возвращаем контекст обратно
+    });
+    
+  this.editor.addPipe(context => {
+    if (context.type === 'nodecreate') {
+      setTimeout(() => {
+        const nodes = this.editor.getNodes();
+      console.log(nodes)
+      }, 200);
+    }
+    // if (context.type === "nodepicked"){
+    //   const selectedNode = context.data;
+    //   console.log("Выбран узел:", selectedNode); // Выводим сообщение о выборе узла в консоль
+    // }
+    return context
+  })
    this.render.addPreset(Presets.classic.setup({
     customize: {
         control(context) {
@@ -111,7 +142,7 @@ export class MyEditor {
         }
        
         return null
-      }
+      },
    }}));
 
    
@@ -119,13 +150,15 @@ export class MyEditor {
     return () => this.area.destroy();
   }
 
-  
   public async addNewNode() {
     const node = this.nodeCreatorService.createCustomNode(this.socket);
     this.nodes = [...this.nodes, node];
-    if(node.selected !== undefined){
-      console.log(node.selected.valueOf());
+    console.log(node.id)
+    if(node.selected){
+      
+      console.log("selected", node.id)
     }
+    // this.selector.isSelected("nodepicked"  node.id)
     await this.editor.addNode(node);
   }
   public async addControl() {  //Пример контрола по идее на каждый "обькт " свой
@@ -162,9 +195,6 @@ export class MyEditor {
 
   public async DeleteNode() {  //Пример контрола по идее на каждый "обькт " свой
     const node = this.editor.getNodes().filter(node => node.selected) 
-
-
-    
     if(node !== undefined){
       console.log(node[0].id); //не сразу понял что node это список из 1 экземпляра он всего []
       const node1 = node[0]
@@ -172,11 +202,11 @@ export class MyEditor {
       this.area.removeNodeView(node1.id) //метода работает, но не работае в кнопке которую я создаю
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
     }
-
   }
 
   public async addImageComponent(){
     const selectedNode = this.editor.getNodes().find(node => node.selected);
+    
     console.log(this.imageService.getImgUrl())
     if (selectedNode){
 
