@@ -8,6 +8,9 @@ export class TextControl extends ClassicPreset.Control {
     super();
    
   }
+  getValue(): string | null {
+    return this.text;
+  }
 }
 
 

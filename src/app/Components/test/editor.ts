@@ -27,6 +27,7 @@ import { TextStateService } from "src/app/services/text-state.service";
 import { TextBoxComponent, TextControl } from "./dockNodes/text-box/text-box.component";
 import { NodeId, Root } from 'rete';
 import { Signal, Pipe, Scope } from 'rete';
+import { ControlContainer } from "@angular/forms";
 
 
 // 
@@ -106,9 +107,32 @@ export class MyEditor {
     this.area.addPipe(context => { // Добавление обработчика событий в область редактора
       if (context.type === 'nodepicked') { // Проверка типа события
         const pickedId = context.data.id; // Получение id выбранного узла из данных события
-       console.log(pickedId)
-       console.log(       this.editor.getNode(pickedId) //нужно проверить как достать данные из контролов.
-       )
+        const Node = this.editor.getNode(pickedId);
+        console.log(pickedId)
+       console.log(this.editor.getNode(pickedId))//нужно проверить как достать данные из контролов.
+       console.log()
+       if (Node.hasControl("TextBox")){
+        
+        // const Text = this.editor.getNode(pickedId).controls["TextBox"]?.id;
+                const Text = this.editor.getNode(pickedId).controls;
+        const contetn = this.nodes.find(n => pickedId)
+  
+        //єто id controla - найти метод как достать данніе типа гетконтролс.айди
+        console.log(this.editor.getNode(pickedId).controls["TextBox"]?.id)
+        const textControl = Text["TextBox"];
+if (textControl instanceof TextControl) {
+    const textValue = textControl.text;
+    console.log(textValue + "получилось"); // сука.то шо надо наконец. нельзя сделать Text.text сука потому что надо InstanceOF
+
+    this.textStateService.setText(textValue!)
+    console.log(this.textStateService.getText() + "со стейта данные")
+  } 
+        
+        const textBoxControl = Node.controls["TextBox"]; // Получаем контрол с идентификатором "TextBox"
+       
+      this.addTextFromNodeToState(pickedId)
+      }//НЕ РАБОТАЕТ, а как.
+       
       }
       return context; // Возвращаем контекст обратно
     });
@@ -148,6 +172,11 @@ export class MyEditor {
    
 
     return () => this.area.destroy();
+  }
+
+  public async addTextFromNodeToState(pickedId: string){
+    const textFromControlId = this.editor.getNode(pickedId).controls["TextBox"]?.id;
+    // this.editor.getNode(pickedId).hasControl.call(get)
   }
 
   public async addNewNode() {
