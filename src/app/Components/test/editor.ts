@@ -5,6 +5,7 @@ import { NodeEditor, GetSchemes, ClassicPreset } from "rete";
 import { AreaPlugin, AreaExtensions, } from "rete-area-plugin";
 import {
   ClassicFlow,
+
   ConnectionPlugin,
   Presets as ConnectionPresets
 } from "rete-connection-plugin";
@@ -120,8 +121,8 @@ export class MyEditor {
   } }
 }
   
-      if (context.type === "connectioncreate") {
-const outputId = context.data.sourceOutput
+      if (context.type === "nodepicked") {
+const outputId = context.data.id
 console.log(outputId + "1")
       }
       return context; // Возвращаем контекст обратно
@@ -172,13 +173,17 @@ console.log(outputId + "1")
   public async addNewNode() {
     const node = this.nodeCreatorService.createCustomNode(this.socket);
     this.nodes = [...this.nodes, node];
-    console.log(node.id)
-    if(node.selected){
-      
-      console.log("selected", node.id)
-    }
-    // this.selector.isSelected("nodepicked"  node.id)
+    console.log(node.id);
     await this.editor.addNode(node);
+
+
+    if (this.nodes.length >1) {
+        //так надо.
+      await this.editor.addConnection(new ClassicPreset.Connection(this.nodes[this.nodes.length - 2], "a", this.nodes[this.nodes.length - 1], "b"));
+      //я соединяю предпоследнюю с вновь созданой
+    }
+  
+
   }
   public async addControl() {  //Пример контрола по идее на каждый "обькт " свой
     const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 
@@ -200,8 +205,18 @@ console.log(outputId + "1")
       node1.addControl("button", //этот метод написан не верно, пока не понимаю почему, что-то происходит в окне но нет кнпоки.
       new ButtonControl("Delete", () => {
         console.log("Кнопка нажата"); //не вижу консоль (вижу упдейт спустя 30 минут)
-        this.area.removeNodeView(node1.id) //можно было бы вызвать метод DeleteNode но он удалит не эту ноду, а ту которая будет выделена.
+        // this.area.removeNodeView(node1.id) //можно было бы вызвать метод DeleteNode но он удалит не эту ноду, а ту которая будет выделена.
                                           //у этой ноды свой node1.id константа у каждого метода своя.
+       const connectionsToRemove = this.editor.getConnections().filter(connection => 
+        connection.source === node1.id || connection.target === node1.id
+      );
+      connectionsToRemove.forEach(connection => this.editor.removeConnection(connection.id));
+
+      // Удаление ноды из области редактора
+      this.area.removeNodeView(node1.id);
+      
+      // Удаление ноды из редактора
+      this.editor.removeNode(node1.id);
       })
       );
       console.log(AreaExtensions.accumulateOnCtrl())
@@ -213,13 +228,22 @@ console.log(outputId + "1")
   }
 
   public async DeleteNode() {  //Пример контрола по идее на каждый "обькт " свой
+
+    //метод который нигде не вызывается вроде как
     const node = this.editor.getNodes().filter(node => node.selected) 
+    console.log(      this.editor.getConnection(node[0].id)
+    )
     if(node !== undefined){
       console.log(node[0].id); //не сразу понял что node это список из 1 экземпляра он всего []
       const node1 = node[0]
-
+     
+      node1.removeInput
+      node1.removeOutput
+      this.area.removeConnectionView(node1.id);
+      this.editor.removeConnection(node1.id)
       this.area.removeNodeView(node1.id) //метода работает, но не работае в кнопке которую я создаю
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
+      this.area.update
     }
   }
 
