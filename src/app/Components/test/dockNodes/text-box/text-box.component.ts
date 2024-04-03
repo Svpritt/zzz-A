@@ -6,10 +6,6 @@ export class TextControl extends ClassicPreset.Control {
 
   constructor(public text: string | null) {
     super();
-   
-  }
-  getValue(): string | null {
-    return this.text;
   }
 }
 

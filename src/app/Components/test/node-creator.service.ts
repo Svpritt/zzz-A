@@ -14,22 +14,13 @@ export class NodeCreatorService {
   constructor() {
 
    }
-   handleNodePicked(event: CustomEvent) {
-    // Обработка события nodepicked
-    console.log('Node picked event:', event.detail);
-  }
-
 
   createCustomNode(socket: ClassicPreset.Socket): ClassicPreset.Node {
     const customNode = new ClassicPreset.Node("Custom");
-console.log(customNode.id)
-if(customNode.selected){
-  console.log("selected", customNode.id)
-}
+    console.log(customNode.id)
     customNode.addControl("a", new ClassicPreset.InputControl("text", { initial: "first" }));
     customNode.addOutput("a", new ClassicPreset.Output(socket));
-
-
+    customNode.addInput("b", new ClassicPreset.Input(socket, undefined, true)); //мультиконекшн просто тру фалс 3й параметр, но тогда второй обящателен
     return customNode;
   }
 }

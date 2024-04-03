@@ -31,9 +31,6 @@ export class EditorControlService {
     await this.editor.createEditor();
     
   }
-
- 
-
   log(){
     
     return     this.editor.area.area.content.holder  //возразает HTML со всем контентом... хз как это использовать. оставлю пока тут

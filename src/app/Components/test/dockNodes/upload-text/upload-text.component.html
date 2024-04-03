@@ -1,9 +1,6 @@
-<!-- upload-text.component.html -->
 <form (ngSubmit)="uploadText()">
-    <p><label for="textArea">Write your text:</label></p>
-    <textarea id="textArea" name="textArea" [(ngModel)]="textValue" rows="4" cols="50" style="width:100%; height:min-content;"></textarea>
-    <br>
-    <input type="submit" value="текст в стейт" placeholder="Текст в стейт">
-  </form>
-  
-
+  <p><label for="textArea">Write your text:</label></p>
+  <textarea id="textArea" name="textArea" [(ngModel)]="textValue" rows="4" cols="30" style="width:100%; height:min-content;"></textarea>
+  <br>
+  <input type="submit" value="текст в стейт" placeholder="Текст в стейт">
+</form>

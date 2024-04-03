@@ -48,7 +48,7 @@ export class MyEditor {
     private injector: Injector,
     private nodeCreatorService: NodeCreatorService, // Внедрение NodeCreatorService
     private imageService: ImageService,
-    private textStateService: TextStateService
+    private textStateService: TextStateService,
     )
   {
      this.socket = new ClassicPreset.Socket("socket");
@@ -58,15 +58,9 @@ export class MyEditor {
      this.render = new AngularPlugin<Schemes, AreaExtra>({ injector });
      this.dock = new DockPlugin<Schemes>();
 
-     // Установка слушателя события nodepicked
-    // this.selector.isPicked.addEventListener('nodepicked', this.handleNodePicked.bind(this));
 
   } 
-  // private handleNodePicked(event: CustomEvent) {
-  //   // Обработка события nodepicked
-  //   console.log('Node picked event:', event.detail);
-  // }
-  
+
   socket : ClassicPreset.Socket;
   editor : NodeEditor<Schemes>;
   area : AreaPlugin<Schemes, AreaExtra>;
@@ -109,47 +103,30 @@ export class MyEditor {
         const pickedId = context.data.id; // Получение id выбранного узла из данных события
         const Node = this.editor.getNode(pickedId);
         console.log(pickedId)
-       console.log(this.editor.getNode(pickedId))//нужно проверить как достать данные из контролов.
-       console.log()
+       console.log(this.editor.getNode(pickedId))//нужно проверить как достать данные из контролов
        if (Node.hasControl("TextBox")){
-        
         // const Text = this.editor.getNode(pickedId).controls["TextBox"]?.id;
-                const Text = this.editor.getNode(pickedId).controls;
+        const Text = this.editor.getNode(pickedId).controls;
         const contetn = this.nodes.find(n => pickedId)
-  
-        //єто id controla - найти метод как достать данніе типа гетконтролс.айди
+        //єто id controla - найти метод как достать данніе типа гетконтролс.айди 
+        //в итоге я помещаю их в стейт без этого..
         console.log(this.editor.getNode(pickedId).controls["TextBox"]?.id)
         const textControl = Text["TextBox"];
-if (textControl instanceof TextControl) {
-    const textValue = textControl.text;
-    console.log(textValue + "получилось"); // сука.то шо надо наконец. нельзя сделать Text.text сука потому что надо InstanceOF
-
-    this.textStateService.setText(textValue!)
-    console.log(this.textStateService.getText() + "со стейта данные")
-  } 
-        
-        const textBoxControl = Node.controls["TextBox"]; // Получаем контрол с идентификатором "TextBox"
-       
-      this.addTextFromNodeToState(pickedId)
-      }//НЕ РАБОТАЕТ, а как.
-       
+        if (textControl instanceof TextControl) {
+        const textValue = textControl.text;
+        console.log(textValue + "получилось"); // *&%^&*.то шо надо наконец. нельзя сделать Text.text *&^*& потому что надо InstanceOF спасибо типизации))))
+        this.textStateService.setText(textValue!+"1") //кидаем в стейт единичка дает понимание что стейт рили изменился 
+        console.log(this.textStateService.getText() + "со стейта данные")
+  } }
+}
+  
+      if (context.type === "connectioncreate") {
+const outputId = context.data.sourceOutput
+console.log(outputId + "1")
       }
       return context; // Возвращаем контекст обратно
     });
-    
-  this.editor.addPipe(context => {
-    if (context.type === 'nodecreate') {
-      setTimeout(() => {
-        const nodes = this.editor.getNodes();
-      console.log(nodes)
-      }, 200);
-    }
-    // if (context.type === "nodepicked"){
-    //   const selectedNode = context.data;
-    //   console.log("Выбран узел:", selectedNode); // Выводим сообщение о выборе узла в консоль
-    // }
-    return context
-  })
+
    this.render.addPreset(Presets.classic.setup({
     customize: {
         control(context) {
@@ -164,19 +141,32 @@ if (textControl instanceof TextControl) {
         if (context.payload instanceof ButtonControl) {
           return ButtonComponent;
         }
-       
         return null
       },
+
+
    }}));
 
-   
+   this.editor.addPipe(context => {
+    if (context.type === "connectioncreate") {
+        const outputId = context.data.sourceOutput
+      console.log(outputId)
+      //когда кликаю на output должен проверить входит ли он в инпут, если нет, ты вызвать создание ноды, и сделать инпут в нее
+      //это не из селектед, а из того output.id  которой я беру 
+      // возможно оутпут будет не из ноды а из ее элемента.(контрола)
+      const nodes = this.editor.getNodes()
+      const connections = this.editor.getNodes()
+      setTimeout(() => {
+        if(nodes){
+          console.log(nodes)
+        }
+      }, 10, );
+      
+    }
+    return context
+  })
 
     return () => this.area.destroy();
-  }
-
-  public async addTextFromNodeToState(pickedId: string){
-    const textFromControlId = this.editor.getNode(pickedId).controls["TextBox"]?.id;
-    // this.editor.getNode(pickedId).hasControl.call(get)
   }
 
   public async addNewNode() {
@@ -256,20 +246,16 @@ if (textControl instanceof TextControl) {
 }
 
 
-public async addTextBoxComponent(){
+public async addTextBoxComponent() {
   const selectedNode = this.editor.getNodes().find(node => node.selected);
-  console.log(this.textStateService.getText())
-  // if (selectedNode){
+  const text = await this.textStateService.getText(); // Ждем получения текста из сервиса
 
-  if (selectedNode){
-    const text = this.textStateService.getText();
-    const control =  new TextControl(text);
-    this.textStateService.setText(text!)
+  if (selectedNode && text !== null) {
+    const control = new TextControl(text);
     selectedNode.removeControl("TextBox");
     selectedNode.addControl("TextBox", control);
-    this.area.update("node", selectedNode.id)
+    this.area.update("node", selectedNode.id);
   }
-
 }
 
 
