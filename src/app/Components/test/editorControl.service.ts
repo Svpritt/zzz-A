@@ -5,6 +5,9 @@ import { classic } from 'rete-angular-plugin/presets';
 import { NodeCreatorService } from './node-creator.service';
 import { ImageService } from 'src/app/services/imgUrl.service';
 import { TextStateService } from 'src/app/services/text-state.service';
+import { NodeFactory } from 'rete-context-menu-plugin/_types/presets/classic/types';
+
+
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -27,6 +30,7 @@ export class EditorControlService {
   async createEditor(el: HTMLElement) {
 
     this.editor = new MyEditor(el, this.injector, new NodeCreatorService(), new ImageService(), new TextStateService());
+  //  this.editor.nodes.push()
     
     await this.editor.createEditor();
     

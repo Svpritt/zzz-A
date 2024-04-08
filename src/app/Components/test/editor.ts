@@ -29,6 +29,7 @@ import { TextBoxComponent, TextControl } from "./dockNodes/text-box/text-box.com
 import { NodeId, Root } from 'rete';
 import { Signal, Pipe, Scope } from 'rete';
 import { ControlContainer } from "@angular/forms";
+import { ControlState, EditorState, NodeState } from "./editor-state";
 
 
 // 
@@ -72,6 +73,9 @@ export class MyEditor {
   selector = AreaExtensions.selector();
   accumulating = AreaExtensions.accumulateOnCtrl()
 
+  editorState: EditorState = new EditorState();
+
+
 
 
   public async  createEditor() {
@@ -90,11 +94,18 @@ export class MyEditor {
     this.render.addPreset(Presets.contextMenu.setup());
     this.editor.use(this.area);
 
-    
     this.area.use(this.connection);
     this.area.use(this.render);
     this.area.use(this.dock);
     this.area.use(contextMenu);
+
+
+
+    // короче когда будет стейт где то - то делаем запрос получаем, далее добавлем все ноды, и в каждой добавляем каждое ее свойство контролов
+    //потом Ареа делает запрос на конекты, и ставит конекты, потом все это в единый асинк эвей
+    // const NodeZ = this.nodeCreatorService.createCustomNode(this.socket)
+    // NodeZ.id = "sadsqdwdas1"
+    // this.editor.addNode(NodeZ)
 
     this.dock.add(() => new NodeA(this.socket));
     this.dock.add(() => new NodeB(this.socket));
@@ -104,14 +115,69 @@ export class MyEditor {
         const pickedId = context.data.id; // Получение id выбранного узла из данных события
         const Node = this.editor.getNode(pickedId);
         console.log(pickedId)
-       console.log(this.editor.getNode(pickedId))//нужно проверить как достать данные из контролов
+        const serializedNode = JSON.stringify(this.editor, null, 2);
+    
+        // console.log(serializedNode)
+        const editorStateToJSON = JSON.stringify(this.editorState.nodes, null, 2)
+        console.log(editorStateToJSON)
+       console.log(this.editor.getNode(pickedId).controls)//нужно проверить как достать данные из контролов
+       const controls = this.editor.getNode(pickedId).controls;
+//         if(controls){
+//           if (controls) {
+//             for (const controlName in controls) {
+//                 if (controls.hasOwnProperty(controlName)) {
+//                     const control = controls[controlName];
+//                     console.log(`Control: ${controlName}`);
+//                     for (const property in control) {
+//                         if (Object.prototype.hasOwnProperty.call(control, property)) {
+//                             console.log(`${property}: ${control[property]}`);
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+// }
+// if (controls) {
+//   for (const controlName in controls) {
+//     if (controls.hasOwnProperty(controlName)) {
+//       const control = controls[controlName];
+
+//       // Проверяем тип контрола
+//       if (control instanceof TextControl) {
+//         // Обработка контрола типа TextControl
+        
+//         console.log(`Control: ${controlName}, Type: TextControl`);
+//         console.log(controlName, control.text)
+//       } else if (control instanceof ImageControl) {
+//         // Обработка контрола типа ImageControl
+//         console.log(`Control: ${controlName}, Type: ImageControl`);
+//       } else if (control instanceof ButtonControl) {
+//         // Обработка контрола типа ButtonControl
+//         console.log(`Control: ${controlName}, Type: ButtonControl`);
+//       } 
+//       if (control instanceof ClassicPreset.Input) {
+//         // Обработка контрола типа InputControl
+//         console.log(`Type: InputControl`);
+//         console.log(`Value: ${control.socket}`);
+//         console.log(`MultiConnections: ${control.multipleConnections?.valueOf}`);
+//         console.log(`label: ${control.label}`);
+//         console.log(`label: ${control.control}`);
+//         console.log(`label: ${control.id}`);
+
+
+//       }
+//       else {
+//         // Обработка других типов контролов
+//         console.log(`Control: ${controlName}, Type: Unknown`);
+//       }
+//     }
+//   }
+// }
        if (Node.hasControl("TextBox")){
-        // const Text = this.editor.getNode(pickedId).controls["TextBox"]?.id;
         const Text = this.editor.getNode(pickedId).controls;
         const contetn = this.nodes.find(n => pickedId)
-        //єто id controla - найти метод как достать данніе типа гетконтролс.айди 
-        //в итоге я помещаю их в стейт без этого..
-        console.log(this.editor.getNode(pickedId).controls["TextBox"]?.id)
+       
+        console.log(this.editor.getNode(pickedId).controls["TextBox"])
         const textControl = Text["TextBox"];
         if (textControl instanceof TextControl) {
         const textValue = textControl.text;
@@ -123,7 +189,7 @@ export class MyEditor {
   
       if (context.type === "nodepicked") {
 const outputId = context.data.id
-console.log(outputId + "1")
+// console.log(outputId + "1")
       }
       return context; // Возвращаем контекст обратно
     });
@@ -155,13 +221,20 @@ console.log(outputId + "1")
       //когда кликаю на output должен проверить входит ли он в инпут, если нет, ты вызвать создание ноды, и сделать инпут в нее
       //это не из селектед, а из того output.id  которой я беру 
       // возможно оутпут будет не из ноды а из ее элемента.(контрола)
-      const nodes = this.editor.getNodes()
       const connections = this.editor.getNodes()
-      setTimeout(() => {
-        if(nodes){
-          console.log(nodes)
-        }
-      }, 10, );
+      const serializedData = JSON.stringify(this.editor);
+
+
+      const nodes = this.editor.getNodes()
+      // setTimeout(() => {
+      //   if(nodes){
+      //     // console.log(nodes)
+      //     // console.log(serializedData)
+      //   }
+      // }, 10, );
+      
+    }
+    if (context.type === "nodecreate"){
       
     }
     return context
@@ -170,20 +243,63 @@ console.log(outputId + "1")
     return () => this.area.destroy();
   }
 
-  public async addNewNode() {
+  public async addNewNodeFacebook() {
     const node = this.nodeCreatorService.createCustomNode(this.socket);
-    this.nodes = [...this.nodes, node];
-    console.log(node.id);
-    await this.editor.addNode(node);
 
+    const nodeState = new NodeState();
+    nodeState.id = node.id;
+    nodeState.label = node.label;
+    // nodeState.botType = 'facebook';
+
+    this.editorState.nodes.push(nodeState);
+
+    this.nodes = [...this.nodes, node];
+
+    // console.log(node.id);
+    await this.editor.addNode(node);
+    
 
     if (this.nodes.length >1) {
-        //так надо.
-      await this.editor.addConnection(new ClassicPreset.Connection(this.nodes[this.nodes.length - 2], "a", this.nodes[this.nodes.length - 1], "b"));
-      //я соединяю предпоследнюю с вновь созданой
+     
+      if (this.nodes.length > 1) {
+        const step = 80; // Шаг смещения
+        for (let i = 1; i < this.nodes.length; i++) {
+          const x = 50 + (i - 1) * step; // Рассчитываем координату X относительно первых координат
+          const y = 50 + (i - 1) * step; // Рассчитываем координату Y придумать как относительно предыдущей ноды..
+      
+          await this.editor.addConnection(new ClassicPreset.Connection(this.nodes[i - 1], "a", this.nodes[i], "b"));
+          await this.area.translate(node.id, { x, y });
+        }
+      }
     }
-  
+  }
+  public async addNewNode() {
+    const node = this.nodeCreatorService.createCustomNode(this.socket);
+    const nodeState = new NodeState();
+    nodeState.id = node.id;
+    nodeState.label = node.label;
+    console.log(node.inputs)
+    console.log(node.outputs)
+    
+    // nodeState.botType = 'telegram';
+    console.log(this.editor.getConnections())
 
+    this.editorState.nodes.push(nodeState);
+    this.nodes = [...this.nodes, node];
+
+    await this.editor.addNode(node);
+    if (this.nodes.length >1) { 
+      if (this.nodes.length > 1) {
+        const step = 80; // Шаг смещения
+        for (let i = 1; i < this.nodes.length; i++) {
+          const x = 50 + (i - 1) * step; // Рассчитываем координату X относительно первых координат
+          const y = 50 + (i - 1) * step; // Рассчитываем координату Y придумать как относительно предыдущей ноды..
+      
+          await this.editor.addConnection(new ClassicPreset.Connection(this.nodes[i - 1], "Output", this.nodes[i], "Input"));
+          await this.area.translate(node.id, { x, y });
+        }
+      }
+    }
   }
   public async addControl() {  //Пример контрола по идее на каждый "обькт " свой
     const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 
@@ -191,7 +307,23 @@ console.log(outputId + "1")
     if(node !== undefined){
       console.log(node[0].id); //не сразу понял что node это список из 1 экземпляра он всего [] (упдейт их через контрл можно выбирать... несколько с)
       const node1 = node[0]
-      node1.addControl("ab", new ClassicPreset.InputControl("text", {initial: "WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 "}));
+
+      const control = new ClassicPreset.InputControl("text", {initial: "WTF lorem ipsum 10"});
+
+      const controlState = new ControlState();
+
+      controlState.id = control.id;
+      controlState.type = control.type;
+      controlState.value = control.value ?? '';
+
+      const nodeState = this.editorState.nodes.find(n => n.id === node1.id);
+
+      if (nodeState) {
+        nodeState.controls.push(controlState);
+      }
+
+
+      node1.addControl("ab", control);
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
     }
 
@@ -201,24 +333,47 @@ console.log(outputId + "1")
       // максимум 1 нода есть более простой способ ее получить. я его не нашел.
       if(node !== undefined){
       console.log(node[0].id); 
-      const node1 = node[0]
-      node1.addControl("button", //этот метод написан не верно, пока не понимаю почему, что-то происходит в окне но нет кнпоки.
-      new ButtonControl("Delete", () => {
+      const node1 = node[0];
+      const nodeState = this.editorState.nodes.find(n => n.id === node1.id);
+
+      const control = new ButtonControl("delete", () => {
         console.log("Кнопка нажата"); //не вижу консоль (вижу упдейт спустя 30 минут)
         // this.area.removeNodeView(node1.id) //можно было бы вызвать метод DeleteNode но он удалит не эту ноду, а ту которая будет выделена.
                                           //у этой ноды свой node1.id константа у каждого метода своя.
        const connectionsToRemove = this.editor.getConnections().filter(connection => 
         connection.source === node1.id || connection.target === node1.id
       );
+
       connectionsToRemove.forEach(connection => this.editor.removeConnection(connection.id));
 
       // Удаление ноды из области редактора
       this.area.removeNodeView(node1.id);
       
+      // nodeState //тут удаляю из Стейта ноду внутри метода delete 
+      const index = this.editorState.nodes.findIndex(n => n.id === nodeState!.id);
+    if (index !== -1) {
+        this.editorState.nodes.splice(index, 1);
+    }
+
       // Удаление ноды из редактора
       this.editor.removeNode(node1.id);
       })
-      );
+      const controlState = new ControlState();
+      controlState.id = control.id;
+      controlState.onClick = control.onClick;
+      controlState.type = "delete";
+      
+
+      if (nodeState) {
+
+        nodeState.controls = nodeState.controls.filter(c => c.type !== "delete");
+
+        nodeState.controls.push(controlState);
+      }
+
+      
+      node1.addControl("delete", control  );//этот метод написан не верно, пока не понимаю почему, что-то происходит в окне но нет кнпоки.
+    
       console.log(AreaExtensions.accumulateOnCtrl())
       console.log(AreaExtensions.selector())
 
@@ -249,36 +404,61 @@ console.log(outputId + "1")
 
   public async addImageComponent(){
     const selectedNode = this.editor.getNodes().find(node => node.selected);
-    
-    console.log(this.imageService.getImgUrl())
-    if (selectedNode){
 
-      console.log(selectedNode.id);
-      console.log(this.imageService)
-      console.log(this.imageService)
+
+        if (selectedNode){
 
      const data = this.imageService.getImgUrl();
-     //this.imageService.imageUrl$;
      console.log(data)
       const control = new ImageControl(data); // Передаем data в ImageControl
-      selectedNode.removeControl("image");
+      const controlState = new ControlState();
+      controlState.id = control.id;
+      controlState.type = "image";
+      controlState.value = control.imageUrl ?? '';
+      const nodeState = this.editorState.nodes.find(n => n.id === selectedNode.id);
 
+      if (nodeState) {
+        // Удаляем существующий контрол из стейта
+        nodeState.controls = nodeState.controls.filter(c => c.type !== "image");
+        // Добавляем новый контрол в стейт
+        nodeState.controls.push(controlState);
+    }
+      selectedNode.removeControl("image");
       selectedNode.addControl("image", control);
       this.area.update("node", selectedNode.id);
       this.area.update("control", control.id); // Назначаем компонент для контрола
     }
 }
 
-
 public async addTextBoxComponent() {
   const selectedNode = this.editor.getNodes().find(node => node.selected);
-  const text = await this.textStateService.getText(); // Ждем получения текста из сервиса
 
-  if (selectedNode && text !== null) {
-    const control = new TextControl(text);
-    selectedNode.removeControl("TextBox");
-    selectedNode.addControl("TextBox", control);
-    this.area.update("node", selectedNode.id);
+  if (selectedNode) {
+      const text = await this.textStateService.getText(); // Получаем текст из сервиса
+      if (text !== null) {
+          const control = new TextControl(text); // Создаем новый текстовый контрол
+          const controlState = new ControlState();
+          controlState.id = control.id;
+          controlState.type = "text";
+          controlState.value = control.text ?? '';
+
+          const nodeState = this.editorState.nodes.find(n => n.id === selectedNode.id);
+
+          if (nodeState) {
+              // Удаляем существующий текстовый контрол из стейта
+              nodeState.controls = nodeState.controls.filter(c => c.type !== "text");
+              // Добавляем новый текстовый контрол в стейт
+              nodeState.controls.push(controlState);
+          }
+
+          // Удаляем существующий текстовый контрол из узла и добавляем новый
+          selectedNode.removeControl("text");
+          selectedNode.addControl("text", control);
+
+          // Обновляем область редактора
+          this.area.update("node", selectedNode.id);
+          this.area.update("control", control.id); // Назначаем компонент для контрола
+      }
   }
 }
 

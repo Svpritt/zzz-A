@@ -1,0 +1,223 @@
+{
+    "signal": {
+      "pipes": [
+        null,
+        null
+      ]
+    },
+    "name": "NodeEditor",
+    "nodes": [
+      {
+        "inputs": {
+          "b": {
+            "socket": {
+              "name": "socket"
+            },
+            "multipleConnections": true,
+            "id": "8be3c09fdac2ce6f",
+            "control": null,
+            "showControl": true
+          }
+        },
+        "outputs": {
+          "a": {
+            "socket": {
+              "name": "socket"
+            },
+            "multipleConnections": true,
+            "id": "5559454e0156dc2d"
+          }
+        },
+        "controls": {
+          "a": {
+            "id": "1cc6b9f33c30d96c",
+            "type": "text",
+            "options": {
+              "initial": "first"
+            },
+            "value": "first"
+          },
+          "TextBox": {
+            "id": "8cdc4920711f5afc",
+            "text": "this is first node on editor place"
+          }
+        },
+        "label": "Custom",
+        "id": "0ac6b9606f833d4b",
+        "selected": false
+      },
+      {
+        "inputs": {
+          "b": {
+            "socket": {
+              "name": "socket"
+            },
+            "multipleConnections": true,
+            "id": "e2144099ad7fcdf3",
+            "control": null,
+            "showControl": true
+          }
+        },
+        "outputs": {
+          "a": {
+            "socket": {
+              "name": "socket"
+            },
+            "multipleConnections": true,
+            "id": "c89ed6f6b495e0a9"
+          }
+        },
+        "controls": {
+          "a": {
+            "id": "2c6ab3ee91677454",
+            "type": "text",
+            "options": {
+              "initial": "first"
+            },
+            "value": "first"
+          },
+          "TextBox": {
+            "id": "414fe086331a98cb",
+            "text": "this is second node on editor place"
+          },
+          "button": {
+            "id": "ef48d29e356155cf",
+            "label": "Delete"
+          }
+        },
+        "label": "Custom",
+        "id": "8e85869af17844dd",
+        "selected": false
+      },
+      {
+        "inputs": {
+          "b": {
+            "socket": {
+              "name": "socket"
+            },
+            "multipleConnections": true,
+            "id": "6519dcce7c6e3bc6",
+            "control": null,
+            "showControl": true
+          }
+        },
+        "outputs": {
+          "a": {
+            "socket": {
+              "name": "socket"
+            },
+            "multipleConnections": true,
+            "id": "914d0bef5872fcb6"
+          }
+        },
+        "controls": {
+          "a": {
+            "id": "3a061435124b36df",
+            "type": "text",
+            "options": {
+              "initial": "first"
+            },
+            "value": "first"
+          },
+          "TextBox": {
+            "id": "1a36ec422caf307e",
+            "text": "this is third node on editor place"
+          }
+        },
+        "label": "Custom",
+        "id": "b1ac185805ac83f4",
+        "selected": true
+      },
+      {
+        "inputs": {
+          "b": {
+            "socket": {
+              "name": "socket"
+            },
+            "multipleConnections": true,
+            "id": "d5d0b0be020f5aad",
+            "control": null,
+            "showControl": true
+          }
+        },
+        "outputs": {
+          "a": {
+            "socket": {
+              "name": "socket"
+            },
+            "multipleConnections": true,
+            "id": "f521d453d11f6cf4"
+          }
+        },
+        "controls": {
+          "a": {
+            "id": "c7e3adca21a6c1f0",
+            "type": "text",
+            "options": {
+              "initial": "first"
+            },
+            "value": "first"
+          },
+          "TextBox": {
+            "id": "90e348fa088e1de9",
+            "text": "this is four node on editor place"
+          },
+          "ab": {
+            "id": "fad5ec9901fe624a",
+            "type": "text",
+            "options": {
+              "initial": "WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 "
+            },
+            "value": "WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 WTF lorem ipsum 10 "
+          }
+        },
+        "label": "Custom",
+        "id": "d441ad99261bf017",
+        "selected": false
+      }
+    ],
+    "connections": [
+      {
+        "sourceOutput": "a",
+        "targetInput": "b",
+        "id": "6dfb167b99ecbc16",
+        "source": "0ac6b9606f833d4b",
+        "target": "8e85869af17844dd"
+      },
+      {
+        "sourceOutput": "a",
+        "targetInput": "b",
+        "id": "a164a4f49c3ea74f",
+        "source": "0ac6b9606f833d4b",
+        "target": "8e85869af17844dd"
+      },
+      {
+        "sourceOutput": "a",
+        "targetInput": "b",
+        "id": "63182e9db117a598",
+        "source": "8e85869af17844dd",
+        "target": "b1ac185805ac83f4"
+      },
+      {
+        "sourceOutput": "a",
+        "targetInput": "b",
+        "id": "04d4cd4fc3d5fa6c",
+        "source": "0ac6b9606f833d4b",
+        "target": "8e85869af17844dd"
+      },
+      {
+        "sourceOutput": "a",
+        "targetInput": "b",
+        "id": "0e3a73a4e1b6219a",
+        "source": "8e85869af17844dd",
+        "target": "b1ac185805ac83f4"
+      },
+      {
+        "sourceOutput": "a",
+        "targetInput": "b",
+        "id": "35b28816908618f6",
+        "source": "b1ac185805ac83f4",
+        "target": "d441ad99261bf017"
+      }
+    ]
+  }

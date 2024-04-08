@@ -29,6 +29,7 @@ export class TestComponent implements AfterViewInit {
       document.addEventListener('nodepicked', (event: Event) => {
         // Обработка события nodepicked
         console.log('Node picked event:', (event as CustomEvent).detail);
+        
     });
     
     }

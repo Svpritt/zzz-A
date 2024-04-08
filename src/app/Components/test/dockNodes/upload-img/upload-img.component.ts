@@ -22,6 +22,7 @@ export class UploadImgComponent {
         
         reader.onload = (e: ProgressEvent<FileReader>) => {
           const target = e.target as FileReader;
+          console.log(component.Url)
           component.Url = target.result as string;
           this.imageService.setImgUrl(component.Url)
           console.log("Image loaded successfully");
