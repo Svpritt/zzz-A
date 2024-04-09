@@ -1,5 +1,5 @@
 
-import { Injector, Injectable } from "@angular/core";
+import { Injector, Injectable, Input } from "@angular/core";
 
 import { NodeEditor, GetSchemes, ClassicPreset } from "rete";
 import { AreaPlugin, AreaExtensions, } from "rete-area-plugin";
@@ -29,7 +29,7 @@ import { TextBoxComponent, TextControl } from "./dockNodes/text-box/text-box.com
 import { NodeId, Root } from 'rete';
 import { Signal, Pipe, Scope } from 'rete';
 import { ControlContainer } from "@angular/forms";
-import { ControlState, EditorState, NodeState } from "./editor-state";
+import { ConnectionState, ControlState, EditorState, NodeState } from "./editor-state";
 
 
 // 
@@ -119,60 +119,19 @@ export class MyEditor {
     
         // console.log(serializedNode)
         const editorStateToJSON = JSON.stringify(this.editorState.nodes, null, 2)
+        const editorStateToJSONConnections = JSON.stringify(this.editorState.connections, null, 2)
+        console.log(editorStateToJSONConnections)
         console.log(editorStateToJSON)
-       console.log(this.editor.getNode(pickedId).controls)//нужно проверить как достать данные из контролов
+      //  console.log(this.editor.getNode(pickedId).controls)//нужно проверить как достать данные из контролов
        const controls = this.editor.getNode(pickedId).controls;
-//         if(controls){
-//           if (controls) {
-//             for (const controlName in controls) {
-//                 if (controls.hasOwnProperty(controlName)) {
-//                     const control = controls[controlName];
-//                     console.log(`Control: ${controlName}`);
-//                     for (const property in control) {
-//                         if (Object.prototype.hasOwnProperty.call(control, property)) {
-//                             console.log(`${property}: ${control[property]}`);
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-// }
-// if (controls) {
-//   for (const controlName in controls) {
-//     if (controls.hasOwnProperty(controlName)) {
-//       const control = controls[controlName];
 
-//       // Проверяем тип контрола
-//       if (control instanceof TextControl) {
-//         // Обработка контрола типа TextControl
-        
-//         console.log(`Control: ${controlName}, Type: TextControl`);
-//         console.log(controlName, control.text)
-//       } else if (control instanceof ImageControl) {
-//         // Обработка контрола типа ImageControl
-//         console.log(`Control: ${controlName}, Type: ImageControl`);
-//       } else if (control instanceof ButtonControl) {
-//         // Обработка контрола типа ButtonControl
-//         console.log(`Control: ${controlName}, Type: ButtonControl`);
-//       } 
-//       if (control instanceof ClassicPreset.Input) {
-//         // Обработка контрола типа InputControl
-//         console.log(`Type: InputControl`);
-//         console.log(`Value: ${control.socket}`);
-//         console.log(`MultiConnections: ${control.multipleConnections?.valueOf}`);
-//         console.log(`label: ${control.label}`);
-//         console.log(`label: ${control.control}`);
-//         console.log(`label: ${control.id}`);
+       const connections = this.editor.getConnections();
+       const nodeConnections = connections.filter(connection => 
+           connection.source === Node.id || connection.target === Node.id
+       );
+       console.log(nodeConnections);
+   
 
-
-//       }
-//       else {
-//         // Обработка других типов контролов
-//         console.log(`Control: ${controlName}, Type: Unknown`);
-//       }
-//     }
-//   }
-// }
        if (Node.hasControl("TextBox")){
         const Text = this.editor.getNode(pickedId).controls;
         const contetn = this.nodes.find(n => pickedId)
@@ -189,8 +148,33 @@ export class MyEditor {
   
       if (context.type === "nodepicked") {
 const outputId = context.data.id
-// console.log(outputId + "1")
       }
+      if (context.type === "connectioncreated"){ //добавляем в стейт коннект каждый раз когда образуется ЛЮБАЯ связь.
+
+        console.log(context.data); //заебись
+
+        const connectionState = new ConnectionState();
+        connectionState.id = context.data.id
+        connectionState.source = context.data.source
+        connectionState.sourceOutput = context.data.sourceOutput
+        connectionState.target = context.data.target
+        connectionState.targetInput = context.data.targetInput
+
+        this.editorState.connections.push(connectionState)
+        console.log(this.editorState.connections)
+        console.log(`connection ${context.data.id} is created`)
+      
+      }
+      if (context.type === "connectionremoved"){
+        const connectionIdToRemove = context.data.id; // Идентификатор соединения для удаления
+
+        // Фильтрация массива connectionsState для удаления соединения с заданным идентификатором
+        this.editorState.connections = this.editorState.connections.filter(connection => connection.id !== connectionIdToRemove);
+
+        console.log(
+          `connection ${connectionIdToRemove} is deleted`
+        )
+          }
       return context; // Возвращаем контекст обратно
     });
 
@@ -243,63 +227,83 @@ const outputId = context.data.id
     return () => this.area.destroy();
   }
 
-  public async addNewNodeFacebook() {
-    const node = this.nodeCreatorService.createCustomNode(this.socket);
+  // public async addNewNodeFacebook() {
+  //   const node = this.nodeCreatorService.createCustomNode(this.socket);
 
-    const nodeState = new NodeState();
-    nodeState.id = node.id;
-    nodeState.label = node.label;
-    // nodeState.botType = 'facebook';
+  //   const nodeState = new NodeState();
+  //   nodeState.id = node.id;
+  //   nodeState.label = node.label;
+  //   // nodeState.botType = 'facebook';
 
-    this.editorState.nodes.push(nodeState);
+  //   this.editorState.nodes.push(nodeState);
 
-    this.nodes = [...this.nodes, node];
+  //   this.nodes = [...this.nodes, node];
 
-    // console.log(node.id);
-    await this.editor.addNode(node);
+  //   // console.log(node.id);
+  //   await this.editor.addNode(node);
     
 
-    if (this.nodes.length >1) {
+  //   if (this.nodes.length >1) {
      
-      if (this.nodes.length > 1) {
-        const step = 80; // Шаг смещения
-        for (let i = 1; i < this.nodes.length; i++) {
-          const x = 50 + (i - 1) * step; // Рассчитываем координату X относительно первых координат
-          const y = 50 + (i - 1) * step; // Рассчитываем координату Y придумать как относительно предыдущей ноды..
+  //     if (this.nodes.length > 1) {
+  //       const step = 80; // Шаг смещения
+  //       for (let i = 1; i < this.nodes.length; i++) {
+  //         const x = 50 + (i - 1) * step; // Рассчитываем координату X относительно первых координат
+  //         const y = 50 + (i - 1) * step; // Рассчитываем координату Y придумать как относительно предыдущей ноды..
       
-          await this.editor.addConnection(new ClassicPreset.Connection(this.nodes[i - 1], "a", this.nodes[i], "b"));
-          await this.area.translate(node.id, { x, y });
-        }
-      }
-    }
-  }
+  //         await this.editor.addConnection(new ClassicPreset.Connection(this.nodes[i - 1], "a", this.nodes[i], "b"));
+  //         await this.area.translate(node.id, { x, y });
+  //       }
+  //     }
+  //   }
+  // }
   public async addNewNode() {
     const node = this.nodeCreatorService.createCustomNode(this.socket);
     const nodeState = new NodeState();
     nodeState.id = node.id;
     nodeState.label = node.label;
-    console.log(node.inputs)
-    console.log(node.outputs)
+    // nodeState.inputs = node.inputs;
+    // nodeState.outputs =node.outputs;
+    const inputs = node.inputs;
+    const inputJson =  JSON.stringify(inputs)
+    const inputObject = JSON.parse(inputJson);
+    const inputsId = inputObject.Input.id;
+    const multipleConnectionsInput = inputObject.Input.multipleConnections;
+    nodeState.inputs.id = inputsId
+    nodeState.inputs.multipleConnections = multipleConnectionsInput
+
+    const outputs = node.inputs;
+    const outputsJson =  JSON.stringify(outputs)
+    const outputsObject = JSON.parse(outputsJson);
+    const outputsId = outputsObject.Input.id;
+    const multipleConnectionsOutput = inputObject.Input.multipleConnections;
+    nodeState.inputs.id = outputsId
+    nodeState.inputs.multipleConnections = multipleConnectionsOutput
+   
     
     // nodeState.botType = 'telegram';
-    console.log(this.editor.getConnections())
-
+   
     this.editorState.nodes.push(nodeState);
     this.nodes = [...this.nodes, node];
 
     await this.editor.addNode(node);
+    if (this.nodes.length > 1) { //изначально писал ниже, но логика давала 2 конекта у предыдущей ноды на инпут. 
+      const previousNode = this.nodes[this.nodes.length - 2];
+      // Устанавливаем соединение между предыдущей нодой и новой нодой
+      await this.editor.addConnection(new ClassicPreset.Connection(previousNode, "Output", node, "Input"));
+  }
     if (this.nodes.length >1) { 
-      if (this.nodes.length > 1) {
+      
         const step = 80; // Шаг смещения
         for (let i = 1; i < this.nodes.length; i++) {
+
           const x = 50 + (i - 1) * step; // Рассчитываем координату X относительно первых координат
           const y = 50 + (i - 1) * step; // Рассчитываем координату Y придумать как относительно предыдущей ноды..
       
-          await this.editor.addConnection(new ClassicPreset.Connection(this.nodes[i - 1], "Output", this.nodes[i], "Input"));
           await this.area.translate(node.id, { x, y });
+          
         }
       }
-    }
   }
   public async addControl() {  //Пример контрола по идее на каждый "обькт " свой
     const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 

@@ -7,17 +7,20 @@ export class NodeState {
     public id: string = '';
     public label: string = '';
     public selected: boolean = false;
-
-    // public inputs:
-    // public outputs:
-
-
     public botType: string = '';
+    public inputs: NodePort = new NodePort(); // возможно каждому надо было свой класс создать, но хз
+    public outputs: NodePort = new NodePort(); 
 
     public x: number = 0;
     public y: number = 0;
 
     public controls: ControlState[] = [];
+}
+
+export class NodePort {
+    public id: string = '';
+    public multipleConnections: boolean = false;
+    
 }
 
 export class ControlState {
@@ -28,8 +31,10 @@ export class ControlState {
 }
 
 export class ConnectionState {
-    public id: string = '';
-    public fromNodeId: string = '';
-    public toNodeId: string = '';
+    public id: string = ''; // Идентификатор соединения
+    public source: string = ''; // ID узла, являющегося источником соединения
+    public sourceOutput: string = ''; // Название выхода узла-источника
+    public target: string = ''; // ID узла, являющегося целью соединения
+    public targetInput: string = ''; // Название входа узла-цели
 }
 

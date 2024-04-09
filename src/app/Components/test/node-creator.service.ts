@@ -18,7 +18,8 @@ export class NodeCreatorService {
   createCustomNode(socket: ClassicPreset.Socket): ClassicPreset.Node {
     const customNode = new ClassicPreset.Node("Custom");
     // console.log(customNode.id)
-    customNode.addControl("a", new ClassicPreset.InputControl("text", { initial: "first" }));
+    customNode.addControl("a", new ClassicPreset.InputControl("text", { initial: customNode.id }));
+    customNode.label = customNode.id
     customNode.addOutput("Output", new ClassicPreset.Output(socket, undefined, false));
 
     customNode.addInput("Input", new ClassicPreset.Input(socket, undefined, true)); //мультиконекшн просто тру фалс 3й параметр, но тогда второй обящателен
