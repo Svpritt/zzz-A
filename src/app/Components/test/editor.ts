@@ -31,11 +31,8 @@ import { Signal, Pipe, Scope } from 'rete';
 import { ControlContainer } from "@angular/forms";
 import { ConnectionState, ControlState, EditorState, NodeState } from "./editor-state";
 
-
-// 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
-  
   ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node>
 >;
 type AreaExtra = AngularArea2D<Schemes> | ContextMenuExtra;
@@ -59,8 +56,6 @@ export class MyEditor {
      this.connection = new ConnectionPlugin<Schemes, AreaExtra>();
      this.render = new AngularPlugin<Schemes, AreaExtra>({ injector });
      this.dock = new DockPlugin<Schemes>();
-
-
   } 
 
   socket : ClassicPreset.Socket;
@@ -72,20 +67,13 @@ export class MyEditor {
   nodes: ClassicPreset.Node[] = [];
   selector = AreaExtensions.selector();
   accumulating = AreaExtensions.accumulateOnCtrl()
-
   editorState: EditorState = new EditorState();
-
-
-
 
   public async  createEditor() {
     const contextMenu = new ContextMenuPlugin<Schemes>({items: ContextMenuPresets.classic.setup([])})
-    
     this.dock.addPreset(DockPresets.classic.setup({ area:this.area , size: 100, scale: 0.6 }));
-
     AreaExtensions.selectableNodes(this.area, AreaExtensions.selector(), {
       accumulating: AreaExtensions.accumulateOnCtrl(),
-  
   });
 
     this.render.addPreset(Presets.classic.setup());
@@ -98,14 +86,6 @@ export class MyEditor {
     this.area.use(this.render);
     this.area.use(this.dock);
     this.area.use(contextMenu);
-
-
-
-    // короче когда будет стейт где то - то делаем запрос получаем, далее добавлем все ноды, и в каждой добавляем каждое ее свойство контролов
-    //потом Ареа делает запрос на конекты, и ставит конекты, потом все это в единый асинк эвей
-    // const NodeZ = this.nodeCreatorService.createCustomNode(this.socket)
-    // NodeZ.id = "sadsqdwdas1"
-    // this.editor.addNode(NodeZ)
 
     this.dock.add(() => new NodeA(this.socket));
     this.dock.add(() => new NodeB(this.socket));
@@ -122,28 +102,27 @@ export class MyEditor {
         const editorStateToJSONConnections = JSON.stringify(this.editorState.connections, null, 2)
         console.log(editorStateToJSONConnections)
         console.log(editorStateToJSON)
-      //  console.log(this.editor.getNode(pickedId).controls)//нужно проверить как достать данные из контролов
-       const controls = this.editor.getNode(pickedId).controls;
+      //  console.log(this.editor.getNode(pickedId).controls)//нужно проверить как достать данные из контролов я их все достал
+      //  const controls = this.editor.getNode(pickedId).controls;
 
        const connections = this.editor.getConnections();
        const nodeConnections = connections.filter(connection => 
            connection.source === Node.id || connection.target === Node.id
        );
        console.log(nodeConnections);
-   
 
-       if (Node.hasControl("TextBox")){
-        const Text = this.editor.getNode(pickedId).controls;
-        const contetn = this.nodes.find(n => pickedId)
+  //      if (Node.hasControl("TextBox")){
+  //       const Text = this.editor.getNode(pickedId).controls;
+  //       const contetn = this.nodes.find(n => pickedId)
        
-        console.log(this.editor.getNode(pickedId).controls["TextBox"])
-        const textControl = Text["TextBox"];
-        if (textControl instanceof TextControl) {
-        const textValue = textControl.text;
-        console.log(textValue + "получилось"); // *&%^&*.то шо надо наконец. нельзя сделать Text.text *&^*& потому что надо InstanceOF спасибо типизации))))
-        this.textStateService.setText(textValue!+"1") //кидаем в стейт единичка дает понимание что стейт рили изменился 
-        console.log(this.textStateService.getText() + "со стейта данные")
-  } }
+  //       console.log(this.editor.getNode(pickedId).controls["TextBox"])
+  //       const textControl = Text["TextBox"];
+  //       if (textControl instanceof TextControl) {
+  //       const textValue = textControl.text;
+  //       console.log(textValue + "получилось"); // *&%^&*.то шо надо наконец. нельзя сделать Text.text *&^*& потому что надо InstanceOF спасибо типизации))))
+  //       this.textStateService.setText(textValue!+"1") //кидаем в стейт единичка дает понимание что стейт рили изменился 
+  //       console.log(this.textStateService.getText() + "со стейта данные")
+  // } }
 }
   
       if (context.type === "nodepicked") {
@@ -174,6 +153,12 @@ const outputId = context.data.id
         console.log(
           `connection ${connectionIdToRemove} is deleted`
         )
+          }
+          if (context.type === "pointermove"){
+            const areaX = this.area.area.pointer.x //вот эту штуку надо присвоить внутрь эдитора, а от туда доставать в нужный момент и передавать 
+            const areaY = this.area.area.pointer.y // в пайп connectionDrop или сразу в функцию addNewNode чтоб она создавалась в месте курсора.
+            console.log(`pointer x ${areaX} and poiner y ${areaY}`)
+
           }
       return context; // Возвращаем контекст обратно
     });
@@ -223,6 +208,22 @@ const outputId = context.data.id
     }
     return context
   })
+  this.connection.addPipe(context => {
+    if (context.type === 'connectionpick') { // when the user clicks on the socket
+// тут нужно придумать что бы то место откуда конекшн пик (пока в уме)
+    }
+    if (context.type === 'connectiondrop') { // when the user clicks on the socket or any area
+      // console.log(context.data)
+      const coords = this.area.container;
+      console.log(coords)
+      
+    
+      //взть координаты того места где сейчас курсор, вызвать метод addNewNode 
+    // взять новую ноду и поместить по координатам курсора в момент connectiondrop 
+
+    }
+    return context
+  })
 
     return () => this.area.destroy();
   }
@@ -262,7 +263,7 @@ const outputId = context.data.id
     const nodeState = new NodeState();
     nodeState.id = node.id;
     nodeState.label = node.label;
-    // nodeState.inputs = node.inputs;
+    // nodeState.inputs = node.inputs; это не вариант . хотя было бы прикольно
     // nodeState.outputs =node.outputs;
     const inputs = node.inputs;
     const inputJson =  JSON.stringify(inputs)
@@ -296,11 +297,12 @@ const outputId = context.data.id
       
         const step = 80; // Шаг смещения
         for (let i = 1; i < this.nodes.length; i++) {
-
+          
           const x = 50 + (i - 1) * step; // Рассчитываем координату X относительно первых координат
           const y = 50 + (i - 1) * step; // Рассчитываем координату Y придумать как относительно предыдущей ноды..
       
           await this.area.translate(node.id, { x, y });
+          
           
         }
       }
