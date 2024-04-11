@@ -20,7 +20,9 @@ export class NodeCreatorService {
     // console.log(customNode.id)
     customNode.addControl("a", new ClassicPreset.InputControl("text", { initial: customNode.id }));
     customNode.label = customNode.id
-    customNode.addOutput("Output", new ClassicPreset.Output(socket, undefined, false));
+    customNode.addOutput("Output", new ClassicPreset.Output(socket, undefined, false)); //сокет имеет уникальный нейм или кей поэтому при создании сокета
+    customNode.addOutput("Second", new ClassicPreset.Output(socket, undefined, false)); // надо давать ему лейбл и кей===лейбл+id как то так уникализировать
+
 
     customNode.addInput("Input", new ClassicPreset.Input(socket, undefined, true)); //мультиконекшн просто тру фалс 3й параметр, но тогда второй обящателен
     return customNode;

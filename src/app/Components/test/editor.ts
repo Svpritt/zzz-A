@@ -68,6 +68,8 @@ export class MyEditor {
   selector = AreaExtensions.selector();
   accumulating = AreaExtensions.accumulateOnCtrl()
   editorState: EditorState = new EditorState();
+  socketNodeId: string  = "";
+  socketKey: string = "";
 
   public async  createEditor() {
     const contextMenu = new ContextMenuPlugin<Schemes>({items: ContextMenuPresets.classic.setup([])})
@@ -111,23 +113,8 @@ export class MyEditor {
        );
        console.log(nodeConnections);
 
-  //      if (Node.hasControl("TextBox")){
-  //       const Text = this.editor.getNode(pickedId).controls;
-  //       const contetn = this.nodes.find(n => pickedId)
-       
-  //       console.log(this.editor.getNode(pickedId).controls["TextBox"])
-  //       const textControl = Text["TextBox"];
-  //       if (textControl instanceof TextControl) {
-  //       const textValue = textControl.text;
-  //       console.log(textValue + "получилось"); // *&%^&*.то шо надо наконец. нельзя сделать Text.text *&^*& потому что надо InstanceOF спасибо типизации))))
-  //       this.textStateService.setText(textValue!+"1") //кидаем в стейт единичка дает понимание что стейт рили изменился 
-  //       console.log(this.textStateService.getText() + "со стейта данные")
-  // } }
+
 }
-  
-      if (context.type === "nodepicked") {
-const outputId = context.data.id
-      }
       if (context.type === "connectioncreated"){ //добавляем в стейт коннект каждый раз когда образуется ЛЮБАЯ связь.
 
         console.log(context.data); //заебись
@@ -153,12 +140,6 @@ const outputId = context.data.id
         console.log(
           `connection ${connectionIdToRemove} is deleted`
         )
-          }
-          if (context.type === "pointermove"){
-            const areaX = this.area.area.pointer.x //вот эту штуку надо присвоить внутрь эдитора, а от туда доставать в нужный момент и передавать 
-            const areaY = this.area.area.pointer.y // в пайп connectionDrop или сразу в функцию addNewNode чтоб она создавалась в месте курсора.
-            console.log(`pointer x ${areaX} and poiner y ${areaY}`)
-
           }
       return context; // Возвращаем контекст обратно
     });
@@ -211,16 +192,23 @@ const outputId = context.data.id
   this.connection.addPipe(context => {
     if (context.type === 'connectionpick') { // when the user clicks on the socket
 // тут нужно придумать что бы то место откуда конекшн пик (пока в уме)
+        console.log(context.data.socket.key )
+        console.log(context.data.socket.nodeId)
+        this.socketNodeId = context.data.socket.nodeId;
+        this.socketKey = context.data.socket.key;
+        //сделать перменную ноды, и ее конекшена
+        //       await this.editor.addConnection(new ClassicPreset.Connection(previousNode, "Output", node, "Input"));
+        //функция внутри создания ноды
+        //потом в конекшин дроп - очистить значение скорее через 10мсек
+      //в этой функции указать в первом значении эту ноду и ее конекшн - там где оутпут, будет имя конекшена
     }
     if (context.type === 'connectiondrop') { // when the user clicks on the socket or any area
-      // console.log(context.data)
-      const coords = this.area.container;
-      console.log(coords)
-      
-    
-      //взть координаты того места где сейчас курсор, вызвать метод addNewNode 
-    // взять новую ноду и поместить по координатам курсора в момент connectiondrop 
-
+      if (!context.data.socket) { // Если нет активного соединения
+        this.addNewNode();
+        // this.socketNodeId = "";
+        // this.socketKey = "";
+        // Ваш код для получения координат и создания новой ноды
+      }
     }
     return context
   })
@@ -228,36 +216,7 @@ const outputId = context.data.id
     return () => this.area.destroy();
   }
 
-  // public async addNewNodeFacebook() {
-  //   const node = this.nodeCreatorService.createCustomNode(this.socket);
 
-  //   const nodeState = new NodeState();
-  //   nodeState.id = node.id;
-  //   nodeState.label = node.label;
-  //   // nodeState.botType = 'facebook';
-
-  //   this.editorState.nodes.push(nodeState);
-
-  //   this.nodes = [...this.nodes, node];
-
-  //   // console.log(node.id);
-  //   await this.editor.addNode(node);
-    
-
-  //   if (this.nodes.length >1) {
-     
-  //     if (this.nodes.length > 1) {
-  //       const step = 80; // Шаг смещения
-  //       for (let i = 1; i < this.nodes.length; i++) {
-  //         const x = 50 + (i - 1) * step; // Рассчитываем координату X относительно первых координат
-  //         const y = 50 + (i - 1) * step; // Рассчитываем координату Y придумать как относительно предыдущей ноды..
-      
-  //         await this.editor.addConnection(new ClassicPreset.Connection(this.nodes[i - 1], "a", this.nodes[i], "b"));
-  //         await this.area.translate(node.id, { x, y });
-  //       }
-  //     }
-  //   }
-  // }
   public async addNewNode() {
     const node = this.nodeCreatorService.createCustomNode(this.socket);
     const nodeState = new NodeState();
@@ -280,31 +239,28 @@ const outputId = context.data.id
     const multipleConnectionsOutput = inputObject.Input.multipleConnections;
     nodeState.inputs.id = outputsId
     nodeState.inputs.multipleConnections = multipleConnectionsOutput
-   
-    
     // nodeState.botType = 'telegram';
-   
     this.editorState.nodes.push(nodeState);
     this.nodes = [...this.nodes, node];
 
     await this.editor.addNode(node);
     if (this.nodes.length > 1) { //изначально писал ниже, но логика давала 2 конекта у предыдущей ноды на инпут. 
       const previousNode = this.nodes[this.nodes.length - 2];
+      const previousNode1 = this.editor.getNode(this.socketNodeId)
       // Устанавливаем соединение между предыдущей нодой и новой нодой
-      await this.editor.addConnection(new ClassicPreset.Connection(previousNode, "Output", node, "Input"));
+      // if(this.socketNodeId  !== undefined){
+      await this.editor.addConnection(new ClassicPreset.Connection(previousNode1, this.socketKey, node, "Input"));
+      this.socketNodeId = "";
+        this.socketKey = "";
+    // }
   }
     if (this.nodes.length >1) { 
       
-        const step = 80; // Шаг смещения
-        for (let i = 1; i < this.nodes.length; i++) {
+          const areaX = this.area.area.pointer.x;
+          const areaY = this.area.area.pointer.y;
+
+          await this.area.translate(node.id, { x: areaX, y: areaY });
           
-          const x = 50 + (i - 1) * step; // Рассчитываем координату X относительно первых координат
-          const y = 50 + (i - 1) * step; // Рассчитываем координату Y придумать как относительно предыдущей ноды..
-      
-          await this.area.translate(node.id, { x, y });
-          
-          
-        }
       }
   }
   public async addControl() {  //Пример контрола по идее на каждый "обькт " свой
@@ -472,3 +428,47 @@ public async addTextBoxComponent() {
 }
 
 
+  // public async addNewNodeFacebook() {
+  //   const node = this.nodeCreatorService.createCustomNode(this.socket);
+
+  //   const nodeState = new NodeState();
+  //   nodeState.id = node.id;
+  //   nodeState.label = node.label;
+  //   // nodeState.botType = 'facebook';
+
+  //   this.editorState.nodes.push(nodeState);
+
+  //   this.nodes = [...this.nodes, node];
+
+  //   // console.log(node.id);
+  //   await this.editor.addNode(node);
+    
+
+  //   if (this.nodes.length >1) {
+     
+  //     if (this.nodes.length > 1) {
+  //       const step = 80; // Шаг смещения
+  //       for (let i = 1; i < this.nodes.length; i++) {
+  //         const x = 50 + (i - 1) * step; // Рассчитываем координату X относительно первых координат
+  //         const y = 50 + (i - 1) * step; // Рассчитываем координату Y придумать как относительно предыдущей ноды..
+      
+  //         await this.editor.addConnection(new ClassicPreset.Connection(this.nodes[i - 1], "a", this.nodes[i], "b"));
+  //         await this.area.translate(node.id, { x, y });
+  //       }
+  //     }
+  //   }
+  // }
+
+
+    //      if (Node.hasControl("TextBox")){
+  //       const Text = this.editor.getNode(pickedId).controls;
+  //       const contetn = this.nodes.find(n => pickedId)
+       
+  //       console.log(this.editor.getNode(pickedId).controls["TextBox"])
+  //       const textControl = Text["TextBox"];
+  //       if (textControl instanceof TextControl) {
+  //       const textValue = textControl.text;
+  //       console.log(textValue + "получилось"); // *&%^&*.то шо надо наконец. нельзя сделать Text.text *&^*& потому что надо InstanceOF спасибо типизации))))
+  //       this.textStateService.setText(textValue!+"1") //кидаем в стейт единичка дает понимание что стейт рили изменился 
+  //       console.log(this.textStateService.getText() + "со стейта данные")
+  // } }
