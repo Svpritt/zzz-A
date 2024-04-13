@@ -16,6 +16,7 @@ import { ImageService } from "./services/imgUrl.service";
 import { TextBoxComponent } from './Components/test/dockNodes/text-box/text-box.component';
 import { UploadTextComponent } from './Components/test/dockNodes/upload-text/upload-text.component';
 import { FormsModule } from "@angular/forms";
+import { CustomOutputComponent } from './Components/test/dockNodes/custom-output/custom-output.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -25,7 +26,8 @@ import { FormsModule } from "@angular/forms";
     CustomNodeComponent,
     UploadImgComponent,
     TextBoxComponent,
-    UploadTextComponent
+    UploadTextComponent,
+    CustomOutputComponent
     
   ],
   imports: [

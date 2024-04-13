@@ -30,6 +30,7 @@ import { NodeId, Root } from 'rete';
 import { Signal, Pipe, Scope } from 'rete';
 import { ControlContainer } from "@angular/forms";
 import { ConnectionState, ControlState, EditorState, NodeState } from "./editor-state";
+import { CustomOutputComponent, CustomOutputControl } from "./dockNodes/custom-output/custom-output.component";
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -152,7 +153,7 @@ export class MyEditor {
           }
 
           if (context.payload instanceof ImageControl) {
-            return ImageComponent; // Повертаємо компонент ImageComponent
+            return ImageComponent; 
           }
 
         if (context.payload instanceof ButtonControl) {
@@ -160,6 +161,13 @@ export class MyEditor {
         }
         return null
       },
+      socket(context) {
+        if (context.payload instanceof CustomOutputControl) { //метод добавления кнопки, тест конектов, и потом дезигн для ней
+          return CustomOutputComponent; 
+        } else {
+          return null; // Rete.js использует компонент по умолчанию
+        }
+      }
 
 
    }}));
@@ -204,10 +212,22 @@ export class MyEditor {
     }
     if (context.type === 'connectiondrop') { // when the user clicks on the socket or any area
       if (!context.data.socket) { // Если нет активного соединения
-        this.addNewNode();
+        console.log(context.data.created.valueOf())
+        
+        const startNode = this.editor.getNode(this.socketNodeId)
+        const connectionsSoket = this.editor.getConnections();
+        console.log(connectionsSoket)
+       //короче сюда нужно добавить логику, что если сделал конект то заного лкацнуть на Оутпут нельзя. чтоб не делать Мультиконектов где они стоят false
+       //в эту же логику нужно добавить метод который в компоненте при установке связи будет добавлять кнопку Делете - этой самой связли,
+       //и вот когда delete будет отрабатывать то его метод будет снова делать актиной сокет оутпута.
+
+       //получается. сначала мне нужно сделать новый контрол, который будет в себе содержать сокет..
+        if(startNode.hasOutput(this.socketKey) ){
+          this.addNewNode();
+
+        }
         // this.socketNodeId = "";
         // this.socketKey = "";
-        // Ваш код для получения координат и создания новой ноды
       }
     }
     return context
@@ -237,31 +257,31 @@ export class MyEditor {
     const outputsObject = JSON.parse(outputsJson);
     const outputsId = outputsObject.Input.id;
     const multipleConnectionsOutput = inputObject.Input.multipleConnections;
-    nodeState.inputs.id = outputsId
-    nodeState.inputs.multipleConnections = multipleConnectionsOutput
+    nodeState.inputs.id = outputsId;
+    nodeState.inputs.multipleConnections = multipleConnectionsOutput;
     // nodeState.botType = 'telegram';
     this.editorState.nodes.push(nodeState);
     this.nodes = [...this.nodes, node];
 
     await this.editor.addNode(node);
-    if (this.nodes.length > 1) { //изначально писал ниже, но логика давала 2 конекта у предыдущей ноды на инпут. 
-      const previousNode = this.nodes[this.nodes.length - 2];
-      const previousNode1 = this.editor.getNode(this.socketNodeId)
-      // Устанавливаем соединение между предыдущей нодой и новой нодой
+    if (this.nodes.length > 0) { //изначально писал ниже, но логика давала 2 конекта у предыдущей ноды на инпут. 
+      // const previousNode = this.nodes[this.nodes.length - 2];
+      const previousNode = this.editor.getNode(this.socketNodeId)
+      // Устанавливаем соединение между отпут нодой и новой нодой
       // if(this.socketNodeId  !== undefined){
-      await this.editor.addConnection(new ClassicPreset.Connection(previousNode1, this.socketKey, node, "Input"));
+      await this.editor.addConnection(new ClassicPreset.Connection(previousNode, this.socketKey, node, "Input"));
       this.socketNodeId = "";
         this.socketKey = "";
     // }
   }
-    if (this.nodes.length >1) { 
+    // if (this.nodes.length >= 1) { 
       
           const areaX = this.area.area.pointer.x;
           const areaY = this.area.area.pointer.y;
 
           await this.area.translate(node.id, { x: areaX, y: areaY });
           
-      }
+      // }
   }
   public async addControl() {  //Пример контрола по идее на каждый "обькт " свой
     const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 
