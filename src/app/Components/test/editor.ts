@@ -7,7 +7,7 @@ import {
   ConnectionPlugin,
   Presets as ConnectionPresets
 } from "rete-connection-plugin";
-import { AngularPlugin, Presets, AngularArea2D, } from "rete-angular-plugin/15";
+import { AngularPlugin, Presets, AngularArea2D, SocketComponent, } from "rete-angular-plugin/15";
 
 import { MyCustomNode } from "./dockNodes/CustomNode";
 import { NodeCreatorService } from './node-creator.service';
@@ -21,6 +21,9 @@ import { TextBoxComponent, TextControl } from "./dockNodes/text-box/text-box.com
 import { ConnectionState, ControlState, EditorState, NodeState } from "./editor-state";
 import { CustomConnectionComponent } from "./dockNodes/customTest/custom-connection/custom-connection.component";
 import { CustomSocketComponent } from "./dockNodes/customTest/custom-socket/custom-socket.component";
+import { OutputSocket } from "./OutputSocket";
+import { Socket } from "rete/_types/presets/classic";
+// import { AngularArea2D, AngularPlugin, Presets } from "rete-angular-plugin";
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -84,11 +87,17 @@ export class MyEditor {
       connection() {
         return CustomConnectionComponent;
       },
-      socket() {
-        return CustomSocketComponent;
+      socket(context) {
+        if (context.payload instanceof OutputSocket){
+          return CustomSocketComponent;
+        } if (context.payload instanceof ClassicPreset.Socket) {
+          return SocketComponent  //быть внимательным корректно работает с импортом АНгуляр 15. хотя мы в 16том. 
+        }
+        return null
       }
 
-}}));    this.connection.addPreset(ConnectionPresets.classic.setup());
+}}));
+     this.connection.addPreset(ConnectionPresets.classic.setup());
     this.editor.use(this.area);
     this.area.use(this.connection);
     this.area.use(this.render);
@@ -96,8 +105,11 @@ export class MyEditor {
 
 
     const a = new ClassicPreset.Node("Custom");
-    a.addOutput("a", new ClassicPreset.Output(this.socket));
+    a.id = "initial-node" //типа старт ноде - проверки, чтоб ее нельзя было удалить
+    a.addOutput("Output", new ClassicPreset.Output(new OutputSocket(), "output"));
+    a.addOutput("sadasda", new ClassicPreset.Output(this.socket, "blabla"))
     a.addInput("a", new ClassicPreset.Input(this.socket));
+
     await this.editor.addNode(a);
 
 
@@ -220,10 +232,16 @@ export class MyEditor {
   public async addNewOutputControl(){
     const node = this.editor.getNodes().filter(node => node.selected) ;
     const selectedNode = node[0];
-    // const customSocket = new CustomSocketComponent();
-    selectedNode.addOutput("Outpu1t", new ClassicPreset.Output(this.socket, "я добавил динамично", false)); //сокет имеет уникальный нейм или кей поэтому при создании сокета
-    this.area.update("node", selectedNode.id);
 
+
+              const Outputs = selectedNode.outputs;
+              const OutputsNumber = Object.keys(Outputs).length; //катовасия потому что ней уникальный он как id в БД 
+              const OutputName =  "Output" + OutputsNumber;
+              console.log(OutputsNumber)
+
+
+    selectedNode.addOutput(OutputName, new ClassicPreset.Output(new OutputSocket(), "я добавил динамично", false)); //сокет имеет уникальный нейм или кей поэтому при создании сокета
+    this.area.update("node", selectedNode.id);
   }
 
   public async addNewNode() {
@@ -279,49 +297,41 @@ export class MyEditor {
     const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 
                                                                       // максимум 1 нода есть более простой способ ее получить. я его не нашел.
     if(node !== undefined){
-      console.log(node[0].id); //не сразу понял что node это список из 1 экземпляра он всего [] (упдейт их через контрл можно выбирать... несколько с)
-      const node1 = node[0]
-
+      const selectedNode = node[0];
       const control = new ClassicPreset.InputControl("text", {initial: "WTF lorem ipsum 10"});
-
       const controlState = new ControlState();
-
       controlState.id = control.id;
       controlState.type = control.type;
       controlState.value = control.value ?? '';
-
-      const nodeState = this.editorState.nodes.find(n => n.id === node1.id);
-
+      const nodeState = this.editorState.nodes.find(n => n.id === selectedNode.id);
       if (nodeState) {
         nodeState.controls.push(controlState);
       }
-
-
-      node1.addControl("ab", control);
+      selectedNode.addControl("ab", control);
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
     }
-
   }
   public async addButton(){
       const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 
+      if(node[0].id = "initial-node") return //тупо запрещаем добавление баттона на первыую ноду
       // максимум 1 нода есть более простой способ ее получить. я его не нашел.
       if(node !== undefined){
       console.log(node[0].id); 
-      const node1 = node[0];
-      const nodeState = this.editorState.nodes.find(n => n.id === node1.id);
+      const selectedNode = node[0];
+      const nodeState = this.editorState.nodes.find(n => n.id === selectedNode.id);
 
       const control = new ButtonControl("delete", () => {
         console.log("Кнопка нажата"); //не вижу консоль (вижу упдейт спустя 30 минут)
-        // this.area.removeNodeView(node1.id) //можно было бы вызвать метод DeleteNode но он удалит не эту ноду, а ту которая будет выделена.
-                                          //у этой ноды свой node1.id константа у каждого метода своя.
+        // this.area.removeNodeView(selectedNode.id) //можно было бы вызвать метод DeleteNode но он удалит не эту ноду, а ту которая будет выделена.
+                                          //у этой ноды свой selectedNode.id константа у каждого метода своя.
        const connectionsToRemove = this.editor.getConnections().filter(connection => 
-        connection.source === node1.id || connection.target === node1.id
+        connection.source === selectedNode.id || connection.target === selectedNode.id
       );
 
       connectionsToRemove.forEach(connection => this.editor.removeConnection(connection.id));
 
       // Удаление ноды из области редактора
-      this.area.removeNodeView(node1.id);
+      this.area.removeNodeView(selectedNode.id);
       
       // nodeState //тут удаляю из Стейта ноду внутри метода delete 
       const index = this.editorState.nodes.findIndex(n => n.id === nodeState!.id);
@@ -330,7 +340,7 @@ export class MyEditor {
     }
 
       // Удаление ноды из редактора
-      this.editor.removeNode(node1.id);
+      this.editor.removeNode(selectedNode.id);
       })
       const controlState = new ControlState();
       controlState.id = control.id;
@@ -346,12 +356,12 @@ export class MyEditor {
       }
 
       
-      node1.addControl("delete", control  );//этот метод написан не верно, пока не понимаю почему, что-то происходит в окне но нет кнпоки.
+      selectedNode.addControl("delete", control  );//этот метод написан не верно, пока не понимаю почему, что-то происходит в окне но нет кнпоки.
     
       console.log(AreaExtensions.accumulateOnCtrl())
       console.log(AreaExtensions.selector())
 
-      this.area.update("control", node1.id)
+      this.area.update("control", selectedNode.id)
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
       }
   }
@@ -364,13 +374,13 @@ export class MyEditor {
     )
     if(node !== undefined){
       console.log(node[0].id); //не сразу понял что node это список из 1 экземпляра он всего []
-      const node1 = node[0]
+      const selectedNode = node[0]
      
-      node1.removeInput
-      node1.removeOutput
-      this.area.removeConnectionView(node1.id);
-      this.editor.removeConnection(node1.id)
-      this.area.removeNodeView(node1.id) //метода работает, но не работае в кнопке которую я создаю
+      selectedNode.removeInput
+      selectedNode.removeOutput
+      this.area.removeConnectionView(selectedNode.id);
+      this.editor.removeConnection(selectedNode.id)
+      this.area.removeNodeView(selectedNode.id) //метода работает, но не работае в кнопке которую я создаю
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
       this.area.update
     }

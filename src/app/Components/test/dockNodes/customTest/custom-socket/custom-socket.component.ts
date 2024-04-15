@@ -8,8 +8,10 @@ import {
 
 @Component({
   // selector: '[app-custom-socket]',
-  template: `<p>Allow</p>`,
-  styleUrls: ["./custom-socket.component.sass"]
+  template: `<div class="send-message-button">
+  <p><span class="format-container">{{ data.buttonText }} тык</span></p>
+</div>`,
+  styleUrls: ["custom-socket.component.css"]
 })
 export class CustomSocketComponent implements OnChanges {
   @Input() data!: any;
