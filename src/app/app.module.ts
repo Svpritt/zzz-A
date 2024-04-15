@@ -10,24 +10,24 @@ import { MyEditor } from "./Components/test/editor";
 import { ButtonComponent } from "./Components/test/dockNodes/custom-button.component";
 
 import { ImageComponent } from "./Components/test/dockNodes/custmon-img.component";
-import { CustomNodeComponent } from "./Components/test/dockNodes/custom-node/custom-node.component";
 import { UploadImgComponent } from "./Components/test/dockNodes/upload-img/upload-img.component";
 import { ImageService } from "./services/imgUrl.service";
 import { TextBoxComponent } from './Components/test/dockNodes/text-box/text-box.component';
 import { UploadTextComponent } from './Components/test/dockNodes/upload-text/upload-text.component';
 import { FormsModule } from "@angular/forms";
-import { CustomOutputComponent } from './Components/test/dockNodes/custom-output/custom-output.component';
+import { CustomSocketComponent } from "./Components/test/dockNodes/customTest/custom-socket/custom-socket.component";
+import { CustomConnectionComponent } from "./Components/test/dockNodes/customTest/custom-connection/custom-connection.component";
 @NgModule({
   declarations: [
     AppComponent,
     TestComponent,
     ButtonComponent,
     ImageComponent,
-    CustomNodeComponent,
     UploadImgComponent,
     TextBoxComponent,
     UploadTextComponent,
-    CustomOutputComponent
+    CustomSocketComponent,
+    CustomConnectionComponent    
     
   ],
   imports: [

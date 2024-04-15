@@ -31,5 +31,8 @@ export class AppComponent {
   addText(){
     this.editorService.addText();
   }
+  addOutputControl(){
+    this.editorService.addOutputControl();
+  }
 
 }

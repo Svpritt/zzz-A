@@ -29,7 +29,7 @@ export class EditorControlService {
 
   async createEditor(el: HTMLElement) {
 
-    this.editor = new MyEditor(el, this.injector, new NodeCreatorService(), new ImageService(), new TextStateService());
+    this.editor = new MyEditor(el, this.injector, new NodeCreatorService(), new ImageService(), new TextStateService(),);
   //  this.editor.nodes.push()
     
     await this.editor.createEditor();
@@ -60,6 +60,8 @@ export class EditorControlService {
     return this.editor.addTextBoxComponent();
   }
   
-  
+  addOutputControl(){
+    return this.editor.addNewOutputControl();
+  }
   
 }
