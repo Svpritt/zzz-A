@@ -2,7 +2,7 @@ import { Component, Input } from "@angular/core";
 import { ClassicPreset } from "rete";
 
 export class ButtonControl extends ClassicPreset.Control {
-  constructor(public label: string, public onClick: () => void) {
+  constructor(public label: string, public type: string,  public onClick: () => void) {
     super();
     
   }

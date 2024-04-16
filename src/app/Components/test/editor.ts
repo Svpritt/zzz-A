@@ -99,8 +99,95 @@ export class MyEditor {
     this.area.use(this.connection);
     this.area.use(this.render);
 
+    const nodesData = [
+      
+      {
+        "id": "8d6191e9e8ff88ac",
+        "label": "8d6191e9e8ff88ac",
+        "selected": false,
+        "botType": "",
+        "inputs": {
+          "id": "2f86892507bb1038",
+          "multipleConnections": true
+        },
+        "outputs": {
+          "id": "2c9baf1b8a57d938",
+          "multipleConnections": false
+        },
+        "x": 0,
+        "y": 0,
+        "controls": [
+          {
+            "id": "b950cc1775618987",
+            "type": "text",
+            "value": "asdasda"
+          },
+          {
+            "id": "10b9cf5443a959e1",
+            "type": "image",
+            "value": ""
+          },
+          {
+            "id": "322ded4b7c9a93b2",
+            "type": "delete",
+            "value": ""
+          }
+        ]
+      }
+    ];
+    nodesData.forEach(nodeData => {
+      const node = this.nodeCreatorService.createCustomNode(this.socket);
+      
+      const controlsObject: { [id: string]: ClassicPreset.Control } = {};
+      nodeData.controls.forEach(control => {
+          let controlInstance: ClassicPreset.Control;
+    
+          switch (control.type) {
+            case 'text':
+              controlInstance = new TextControl(control.value);
+              break;
+            case 'image':
+              controlInstance = new ImageControl(control.value);
+              break;
+            case 'delete':
+              controlInstance = new ButtonControl("delete", "delete", () => {
+                console.log("Кнопка нажата"); //не вижу консоль (вижу упдейт спустя 30 минут)
+                // this.area.removeNodeView(selectedNode.id) //можно было бы вызвать метод DeleteNode но он удалит не эту ноду, а ту которая будет выделена.
+                                                  //у этой ноды свой selectedNode.id константа у каждого метода своя.
+               const connectionsToRemove = this.editor.getConnections().filter(connection => 
+                connection.source === node.id || connection.target === node.id
+              );
+        
+              connectionsToRemove.forEach(connection => this.editor.removeConnection(connection.id));
+        
+              // Удаление ноды из области редактора
+              this.area.removeNodeView(node.id);
+              
+              // nodeState //тут удаляю из Стейта ноду внутри метода delete 
+              const index = this.editorState.nodes.findIndex(n => n.id === nodeState!.id);
+            if (index !== -1) {
+                this.editorState.nodes.splice(index, 1);
+            }
+        
+              // Удаление ноды из редактора
+              this.editor.removeNode(node.id);
+              });
+              break;
+            // Добавьте дополнительные кейсы для других типов, если необходимо
+            default:
+              controlInstance = new ClassicPreset.Control();
+              break;
+          }
+    
+          controlsObject[control.id] = controlInstance;
+      });
+      
+      node.controls = controlsObject;
+      // node.outputs = nodeData.outputs бля у меня при создании не все попадают в стейт а еще нужно добавленніе добавлять.
 
-
+      this.editor.addNode(node)
+    });
+    
     // const a = new ClassicPreset.Node("Custom");
     // a.id = "initial-node" //типа старт ноде - проверки, чтоб ее нельзя было удалить
     // a.addOutput("Output", new ClassicPreset.Output(new OutputSocket(), "output"));
@@ -109,7 +196,7 @@ export class MyEditor {
 
           const node = this.nodeCreatorService.createCustomNode(this.socket);
           const nodeState = new NodeState();
-          node.id = "initial-node1"
+          node.id = "initial-node"
           node.label = node.id;
           nodeState.id = node.id;
           nodeState.label = node.label;
@@ -256,7 +343,7 @@ export class MyEditor {
     const selectedNode = node[0];
 
               const Outputs = selectedNode.outputs;
-              const OutputsNumber = Object.keys(Outputs).length; //катовасия потому что нейм уникальный он как id в БД 
+              const OutputsNumber = Object.keys(Outputs).length + 1; //катовасия потому что нейм уникальный он как id в БД 
               const OutputName =  "Output" + OutputsNumber;
               console.log(OutputsNumber)
 
@@ -337,13 +424,13 @@ export class MyEditor {
       //наверное учитывая что в списке selected может быть 
       // максимум 1 нода есть более простой способ ее получить. я его не нашел.
       
-      if(node !== undefined && node[0].id !== "initial-node1"){        // if(node[0].id = "initial-node") return //тупо запрещаем добавление баттона на первыую ноду
+      if(node !== undefined && node[0].id !== "initial-node"){        // if(node[0].id = "initial-node") return //тупо запрещаем добавление баттона на первыую ноду
 
       console.log(node[0].id); 
       const selectedNode = node[0];
       const nodeState = this.editorState.nodes.find(n => n.id === selectedNode.id);
 
-      const control = new ButtonControl("delete", () => {
+      const control = new ButtonControl("delete", "delete", () => {
         console.log("Кнопка нажата"); //не вижу консоль (вижу упдейт спустя 30 минут)
         // this.area.removeNodeView(selectedNode.id) //можно было бы вызвать метод DeleteNode но он удалит не эту ноду, а ту которая будет выделена.
                                           //у этой ноды свой selectedNode.id константа у каждого метода своя.
@@ -368,9 +455,9 @@ export class MyEditor {
       const controlState = new ControlState();
       controlState.id = control.id;
       controlState.onClick = control.onClick;
-      controlState.type = "delete";
+      controlState.type = control.type;
       
-
+      console.log(control)
       if (nodeState) {
 
         nodeState.controls = nodeState.controls.filter(c => c.type !== "delete");
