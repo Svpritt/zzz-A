@@ -8,7 +8,6 @@ import {
   Presets as ConnectionPresets
 } from "rete-connection-plugin";
 import { AngularPlugin, Presets, AngularArea2D, SocketComponent, } from "rete-angular-plugin/15";
-
 import { MyCustomNode } from "./dockNodes/CustomNode";
 import { NodeCreatorService } from './node-creator.service';
 
@@ -22,8 +21,7 @@ import { ConnectionState, ControlState, EditorState, NodeState } from "./editor-
 import { CustomConnectionComponent } from "./dockNodes/customTest/custom-connection/custom-connection.component";
 import { CustomSocketComponent } from "./dockNodes/customTest/custom-socket/custom-socket.component";
 import { OutputSocket } from "./OutputSocket";
-import { Socket } from "rete/_types/presets/classic";
-// import { AngularArea2D, AngularPlugin, Presets } from "rete-angular-plugin";
+// import { AngularArea2D, AngularPlugin, Presets } from "rete-angular-plugin"; нельзя, импортим 15й
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -52,7 +50,6 @@ export class MyEditor {
   } 
 
   socket : ClassicPreset.Socket;
-  
   editor : NodeEditor<Schemes>;
   area : AreaPlugin<Schemes, AreaExtra>;
   connection : ConnectionPlugin<Schemes, AreaExtra>;
@@ -83,7 +80,7 @@ export class MyEditor {
         }
         return null
       },
-//вся эта хуйня не работает, и я не ебу почему. вообще ни вместе ни по отдельности НИКАК! UPD ЗАРАБОТАЛО! будем играться.
+
       connection() {
         return CustomConnectionComponent;
       },
@@ -104,13 +101,44 @@ export class MyEditor {
 
 
 
-    const a = new ClassicPreset.Node("Custom");
-    a.id = "initial-node" //типа старт ноде - проверки, чтоб ее нельзя было удалить
-    a.addOutput("Output", new ClassicPreset.Output(new OutputSocket(), "output"));
-    a.addOutput("sadasda", new ClassicPreset.Output(this.socket, "blabla"))
-    a.addInput("a", new ClassicPreset.Input(this.socket));
+    // const a = new ClassicPreset.Node("Custom");
+    // a.id = "initial-node" //типа старт ноде - проверки, чтоб ее нельзя было удалить
+    // a.addOutput("Output", new ClassicPreset.Output(new OutputSocket(), "output"));
+    // a.addOutput("sadasda", new ClassicPreset.Output(this.socket, "blabla"))
+    // a.addInput("a", new ClassicPreset.Input(this.socket));
 
-    await this.editor.addNode(a);
+          const node = this.nodeCreatorService.createCustomNode(this.socket);
+          const nodeState = new NodeState();
+          node.id = "initial-node1"
+          node.label = node.id;
+          nodeState.id = node.id;
+          nodeState.label = node.label;
+        
+          const inputs = node.inputs;
+          const inputJson =  JSON.stringify(inputs)
+          const inputObject = JSON.parse(inputJson);
+          const inputsId = inputObject.Input.id;
+          const multipleConnectionsInput = inputObject.Input.multipleConnections;
+
+          nodeState.inputs.id = inputsId
+          nodeState.inputs.multipleConnections = multipleConnectionsInput
+
+          const outputs = node.outputs;
+          const outputsJson =  JSON.stringify(outputs)
+          const outputsObject = JSON.parse(outputsJson);
+          const outputsId = outputsObject.Output.id;
+          const multipleConnectionsOutput = outputsObject.Output.multipleConnections;
+
+          nodeState.outputs.id = outputsId;
+          nodeState.outputs.multipleConnections = multipleConnectionsOutput;
+
+          
+          // nodeState.botType = 'telegram';
+          this.editorState.nodes.push(nodeState);
+          this.nodes = [...this.nodes, node];
+
+          await this.editor.addNode(node);
+    
 
 
     this.area.addPipe(context => { // Добавление обработчика событий в область редактора
@@ -159,11 +187,8 @@ export class MyEditor {
           `connection ${connectionIdToRemove} is deleted`
         )
           }
-      return context; // Возвращаем контекст обратно
+          return context; // Возвращаем контекст обратно
     });
-
- 
-
 
    this.editor.addPipe(context => {
     if (context.type === "connectioncreate") {
@@ -185,9 +210,7 @@ export class MyEditor {
       // }, 10, );
       
     }
-    if (context.type === "nodecreate"){
-      
-    }
+    
     return context
   })
   this.connection.addPipe(context => {
@@ -226,19 +249,16 @@ export class MyEditor {
     return context
   })
 
-
     return () => this.area.destroy();
   }
   public async addNewOutputControl(){
     const node = this.editor.getNodes().filter(node => node.selected) ;
     const selectedNode = node[0];
 
-
               const Outputs = selectedNode.outputs;
-              const OutputsNumber = Object.keys(Outputs).length; //катовасия потому что ней уникальный он как id в БД 
+              const OutputsNumber = Object.keys(Outputs).length; //катовасия потому что нейм уникальный он как id в БД 
               const OutputName =  "Output" + OutputsNumber;
               console.log(OutputsNumber)
-
 
     selectedNode.addOutput(OutputName, new ClassicPreset.Output(new OutputSocket(), "я добавил динамично", false)); //сокет имеет уникальный нейм или кей поэтому при создании сокета
     this.area.update("node", selectedNode.id);
@@ -256,14 +276,15 @@ export class MyEditor {
     const inputObject = JSON.parse(inputJson);
     const inputsId = inputObject.Input.id;
     const multipleConnectionsInput = inputObject.Input.multipleConnections;
+
     nodeState.inputs.id = inputsId
     nodeState.inputs.multipleConnections = multipleConnectionsInput
 
-    const outputs = node.inputs;
+    const outputs = node.outputs;
     const outputsJson =  JSON.stringify(outputs)
     const outputsObject = JSON.parse(outputsJson);
-    const outputsId = outputsObject.Input.id;
-    const multipleConnectionsOutput = inputObject.Input.multipleConnections;
+    const outputsId = outputsObject.Output.id;
+    const multipleConnectionsOutput = outputsObject.Output.multipleConnections;
 
     nodeState.outputs.id = outputsId;
     nodeState.outputs.multipleConnections = multipleConnectionsOutput;
@@ -312,10 +333,12 @@ export class MyEditor {
     }
   }
   public async addButton(){
-      const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 
-      if(node[0].id = "initial-node") return //тупо запрещаем добавление баттона на первыую ноду
+      const node = this.editor.getNodes().filter(node => node.selected) 
+      //наверное учитывая что в списке selected может быть 
       // максимум 1 нода есть более простой способ ее получить. я его не нашел.
-      if(node !== undefined){
+      
+      if(node !== undefined && node[0].id !== "initial-node1"){        // if(node[0].id = "initial-node") return //тупо запрещаем добавление баттона на первыую ноду
+
       console.log(node[0].id); 
       const selectedNode = node[0];
       const nodeState = this.editorState.nodes.find(n => n.id === selectedNode.id);
@@ -380,7 +403,7 @@ export class MyEditor {
       selectedNode.removeOutput
       this.area.removeConnectionView(selectedNode.id);
       this.editor.removeConnection(selectedNode.id)
-      this.area.removeNodeView(selectedNode.id) //метода работает, но не работае в кнопке которую я создаю
+      this.area.removeNodeView(selectedNode.id)
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
       this.area.update
     }
@@ -388,12 +411,9 @@ export class MyEditor {
 
   public async addImageComponent(){
     const selectedNode = this.editor.getNodes().find(node => node.selected);
-
-
         if (selectedNode){
-
-     const data = this.imageService.getImgUrl();
-     console.log(data)
+      const data = this.imageService.getImgUrl();
+      console.log(data)
       const control = new ImageControl(data); // Передаем data в ImageControl
       const controlState = new ControlState();
       controlState.id = control.id;
@@ -401,12 +421,12 @@ export class MyEditor {
       controlState.value = control.imageUrl ?? '';
       const nodeState = this.editorState.nodes.find(n => n.id === selectedNode.id);
 
-      if (nodeState) {
-        // Удаляем существующий контрол из стейта
-        nodeState.controls = nodeState.controls.filter(c => c.type !== "image");
-        // Добавляем новый контрол в стейт
-        nodeState.controls.push(controlState);
-    }
+        if (nodeState) {
+          // Удаляем существующий контрол из стейта
+          nodeState.controls = nodeState.controls.filter(c => c.type !== "image");
+          // Добавляем новый контрол в стейт
+          nodeState.controls.push(controlState);
+      }
       selectedNode.removeControl("image");
       selectedNode.addControl("image", control);
       this.area.update("node", selectedNode.id);

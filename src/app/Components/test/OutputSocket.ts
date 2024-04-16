@@ -5,7 +5,7 @@ export class OutputSocket extends ClassicPreset.Socket {
     super("Action");
   }
 
-  isCompatibleWith(socket1: ClassicPreset.Socket) {
-    return socket1 instanceof OutputSocket;
+  isCompatibleWith(CustomOutputSocket: ClassicPreset.Socket) {
+    return CustomOutputSocket instanceof OutputSocket;
   }
 }
