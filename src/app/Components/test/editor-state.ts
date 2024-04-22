@@ -9,7 +9,7 @@ export class NodeState {
     public selected: boolean = false;
     public botType: string = '';
     public inputs: NodePort = new NodePort(); // возможно каждому надо было свой класс создать, но хз
-    public outputs: NodePort = new NodePort(); 
+    public outputs: NodePort[] = []; // Изменено на массив
 
     public x: number = 0;
     public y: number = 0;
@@ -20,11 +20,13 @@ export class NodeState {
 export class NodePort {
     public id: string = '';
     public multipleConnections: boolean = false;
+    public label: string = '';
+    public socket: string = 'socket';
     
 }
 
 export class ControlState {
-    public id: string = '';
+    public id: string | undefined = '';
     public type: string = '';
     public onClick!: () => void;
     public value: string = '';
@@ -36,5 +38,9 @@ export class ConnectionState {
     public sourceOutput: string = ''; // Название выхода узла-источника
     public target: string = ''; // ID узла, являющегося целью соединения
     public targetInput: string = ''; // Название входа узла-цели
+}
+
+export function updateLocalStorage(editorState: EditorState) {
+    localStorage.setItem('editorState', JSON.stringify(editorState));
 }
 
