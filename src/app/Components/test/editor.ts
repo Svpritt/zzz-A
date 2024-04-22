@@ -171,6 +171,13 @@ export class MyEditor {
 
 
 }
+if  (context.type === 'nodetranslated'){
+  const pickedId = context.data.id;
+  const Node = this.editor.getNode(pickedId);
+  const position = this.area.nodeViews.get(Node.id)?.position
+  console.log(position)
+  //обновить стейт, поизцию икс и и игрик у селектед ноды, точнее пикед ноды после транслейтед желательно не нонстоп, а после отпускания кнопки
+}
       if (context.type === "connectioncreated"){ //добавляем в стейт коннект каждый раз когда образуется ЛЮБАЯ связь.
 
         console.log(context.data); //заебись
@@ -440,7 +447,7 @@ export class MyEditor {
 console.log(nodesData)
 
 
-    nodesData.forEach( async (nodeData: { controls: any[]; outputs: any[]; x: any; y: any; id: string}) => {
+    nodesData.forEach( async (nodeData: NodeState) => {
       const node = this.nodeCreatorService.createCustomNode(this.socket);
       const nodeId = nodeData.id
       node.id = nodeId
@@ -478,11 +485,14 @@ console.log(nodesData)
 
             if (index !== -1) {
                 this.editorState.nodes.splice(index, 1);
+                // updateLocalStorage(this.editorState);
 
             }
         
               // Удаление ноды из редактора
               this.editor.removeNode(node.id);
+              updateLocalStorage(this.editorState);
+
               });
               break;
             // Добавьте дополнительные кейсы для других типов, если необходимо
@@ -491,7 +501,7 @@ console.log(nodesData)
               break;
           }
 
-          controlsObject[control.id] = controlInstance;
+          controlsObject[control.id!] = controlInstance;
       });}
 
       const OutputsObject: { [id: string]: ClassicPreset.Output<ClassicPreset.Socket> } = {};
@@ -532,6 +542,7 @@ console.log(nodesData)
       const areaX = nodeData.x;
       const areaY = nodeData.y;
      await this.area.translate(node.id, { x: areaX, y: areaY });
+     this.editorState.nodes.push(nodeData); // походу вот эта вещь повзоялет не перезаписывать стейт, а типа пушить туда агаин
       //тут нужно сделать addNewNode(эта нода, что бы  я ее передал аргументом) а там изменить процесс создания
     });
   
