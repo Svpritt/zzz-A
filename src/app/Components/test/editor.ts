@@ -171,12 +171,34 @@ export class MyEditor {
 
 
 }
-if  (context.type === 'nodetranslated'){
+if (context.type === 'nodedragged') {
   const pickedId = context.data.id;
   const Node = this.editor.getNode(pickedId);
-  const position = this.area.nodeViews.get(Node.id)?.position
-  console.log(position)
-  //обновить стейт, поизцию икс и и игрик у селектед ноды, точнее пикед ноды после транслейтед желательно не нонстоп, а после отпускания кнопки
+  const position = this.area.nodeViews.get(Node.id)?.position;
+  console.log(position);
+  //так я вечно дергаю координаты, нужно при ноде пикед - дропет. типа когда перестал пикед нод делать
+ 
+
+  const nodeToUpdate = this.editorState.nodes.find(node => node.id === pickedId);
+
+  if (nodeToUpdate) {
+   
+    nodeToUpdate.x = position!.x;
+    nodeToUpdate.y = position!.y;
+    const updatedNodes = this.editorState.nodes.map(node => {
+      if (node.id === pickedId) {
+        return nodeToUpdate;
+      } else {
+        return node;
+      }
+    });
+
+    this.editorState.nodes = updatedNodes;
+    updateLocalStorage(this.editorState);
+
+  } else {
+    console.error(`Node with ID ${pickedId} not found in EditorState`);
+  }
 }
       if (context.type === "connectioncreated"){ //добавляем в стейт коннект каждый раз когда образуется ЛЮБАЯ связь.
 
