@@ -28,7 +28,6 @@ export class NodePort {
 export class ControlState {
     public id: string | undefined = '';
     public type: string = '';
-    public onClick!: () => void;
     public value: string = '';
 }
 
