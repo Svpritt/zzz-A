@@ -55,15 +55,11 @@ export class MyEditor {
   connection : ConnectionPlugin<Schemes, AreaExtra>;
   render : AngularPlugin<Schemes, AreaExtra>;
   nodes: ClassicPreset.Node[] = [];
-
   selector = AreaExtensions.selector();
   accumulating = AreaExtensions.accumulateOnCtrl()
   editorState: EditorState = new EditorState();
   socketNodeId: string  = "";
   socketKey: string = "";
-  createConnection: any;
-  localStorageLoad: boolean = false;
-   
 
   public async  createEditor() {
     AreaExtensions.selectableNodes(this.area, AreaExtensions.selector(), {
@@ -102,25 +98,71 @@ export class MyEditor {
     this.editor.use(this.area);
     this.area.use(this.connection);
     this.area.use(this.render);
+      const a = new ClassicPreset.Node("Custom");
+      a.id = "initial-node" //типа старт ноде - проверки, чтоб ее нельзя было удалить
+      a.addOutput("Output", new ClassicPreset.Output(new OutputSocket(), "output"));
+      a.addOutput("sadasda", new ClassicPreset.Output(this.socket, "blabla"))
+      a.addInput("a", new ClassicPreset.Input(this.socket));
+
+      const node = this.nodeCreatorService.createCustomNode(this.socket);
+      const nodeState = new NodeState();
+      node.id = "initial-node"
+      node.label = node.id;
+      nodeState.id = node.id;
+      nodeState.label = node.label;
+    
+      const inputs = node.inputs;
+      const inputJson =  JSON.stringify(inputs)
+      const inputObject = JSON.parse(inputJson);
+      const inputsId = inputObject.Input.id;
+      const multipleConnectionsInput = inputObject.Input.multipleConnections;
+
+      nodeState.inputs.id = inputsId
+      nodeState.inputs.multipleConnections = multipleConnectionsInput
+      if (node.outputs && Array.isArray(node.outputs)) {
+        node.outputs.forEach((output: ClassicPreset.Output<OutputSocket>) => {
+            const outputPort = new NodePort();
+            outputPort.id = output.id;
+            outputPort.multipleConnections = output.multipleConnections!;
+            nodeState.outputs.push(outputPort);
+        })}
+
+      // const outputs = node.outputs;
+      // const outputsJson =  JSON.stringify(outputs)
+      // const outputsObject = JSON.parse(outputsJson);
+      // const outputsId = outputsObject.Output.id;
+      // const multipleConnectionsOutput = outputsObject.Output.multipleConnections;
+
+      // nodeState.outputs.id = outputsId;
+      // nodeState.outputs.multipleConnections = multipleConnectionsOutput;
+
       
+      // nodeState.botType = 'telegram';
+      this.editorState.nodes.push(nodeState);
+      this.nodes = [...this.nodes, node];
+
+      await this.editor.addNode(node);
+
 //     
-    this.loadFromNodeData(); 
+    this.loadFromNodeData(); // я должен придумать метод создания ноды - который поместит ее в стейт, а метод addNewNode должен получить ее аргументом
+                            // тогда я должен этот же аргумент передавать из стейта внутри loadFromNodeData 
+    
 
-    this.area.addPipe(context => {
-if ( this.localStorageLoad ){
-return context;
-}
 
+    this.area.addPipe(context => { // Добавление обработчика событий в область редактора
       if (context.type === 'nodepicked') { // Проверка типа события
         const pickedId = context.data.id; // Получение id выбранного узла из данных события
         const Node = this.editor.getNode(pickedId);
         console.log(pickedId)
         // const serializedNode = JSON.stringify(this.editor, null, 2);
         // console.log(serializedNode)
-        // const editorStateToJSON = JSON.stringify(this.editorState.nodes, null, 2)
-        // const editorStateToJSONConnections = JSON.stringify(this.editorState.connections, null, 2)
-        // console.log(editorStateToJSONConnections)
-        // console.log(editorStateToJSON)
+        const editorStateToJSON = JSON.stringify(this.editorState.nodes, null, 2)
+        const editorStateToJSONConnections = JSON.stringify(this.editorState.connections, null, 2)
+        console.log(editorStateToJSONConnections)
+        console.log(editorStateToJSON)
+
+
+
        const connections = this.editor.getConnections();
        const nodeConnections = connections.filter(connection => 
            connection.source === Node.id || connection.target === Node.id
@@ -128,54 +170,59 @@ return context;
        console.log(nodeConnections);
 
 
-      }
-      if (context.type === 'nodedragged') {
-        const pickedId = context.data.id;
-        const nodeToUpdate = this.editorState.nodes.find(node => node.id === pickedId);
-        if (nodeToUpdate) {
-          const position = this.area.nodeViews.get(pickedId)!.position;
-          nodeToUpdate.x = position.x;
-          nodeToUpdate.y = position.y;
-        } else {
-          console.error(`Node with ID ${pickedId} not found in EditorState`);
-        }
-      }
+}
+if (context.type === 'nodedragged') {
+  const pickedId = context.data.id;
+  const Node = this.editor.getNode(pickedId);
+  const position = this.area.nodeViews.get(Node.id)?.position;
+  console.log(position);
+  //так я вечно дергаю координаты, нужно при ноде пикед - дропет. типа когда перестал пикед нод делать
+ 
 
-      if (context.type === 'nodedragged' || context.type === 'nodepicked') {
-        updateLocalStorage(this.editorState);
-      }
+  const nodeToUpdate = this.editorState.nodes.find(node => node.id === pickedId);
 
-      if (context.type === "connectioncreated"){ 
+  if (nodeToUpdate) {
+   
+    nodeToUpdate.x = position!.x;
+    nodeToUpdate.y = position!.y;
+    const updatedNodes = this.editorState.nodes.map(node => {
+      if (node.id === pickedId) {
+        return nodeToUpdate;
+      } else {
+        return node;
+      }
+    });
+
+    this.editorState.nodes = updatedNodes;
+    updateLocalStorage(this.editorState);
+
+  } else {
+    console.error(`Node with ID ${pickedId} not found in EditorState`);
+  }
+}
+      if (context.type === "connectioncreated"){ //добавляем в стейт коннект каждый раз когда образуется ЛЮБАЯ связь.
+
         console.log(context.data); //заебись
-        
-        const haveConnectionInState = this.editorState.connections.find(connection => connection.id === context.data.id);
-        
-        if( !haveConnectionInState){
-          const connectionState = new ConnectionState();
-          connectionState.id = context.data.id
-          connectionState.source = context.data.source
-          connectionState.sourceOutput = context.data.sourceOutput
-          connectionState.target = context.data.target
-          connectionState.targetInput = context.data.targetInput
-          this.editorState.connections.push(connectionState)
-          this.editor.addConnection(connectionState);
-          console.log(this.editorState);
-          updateLocalStorage(this.editorState);
-        }
-          
 
+        const connectionState = new ConnectionState();
+        connectionState.id = context.data.id
+        connectionState.source = context.data.source
+        connectionState.sourceOutput = context.data.sourceOutput
+        connectionState.target = context.data.target
+        connectionState.targetInput = context.data.targetInput
 
-
-        
-      
+        this.editorState.connections.push(connectionState)
         console.log(this.editorState.connections)
         console.log(`connection ${context.data.id} is created`)
+        updateLocalStorage(this.editorState);
 
       
       }
       if (context.type === "connectionremoved"){
-        const connectionIdToRemove = context.data.id; 
-                this.editorState.connections = this.editorState.connections.filter(connection => connection.id !== connectionIdToRemove);
+        const connectionIdToRemove = context.data.id; // Идентификатор соединения для удаления
+
+        // Фильтрация массива connectionsState для удаления соединения с заданным идентификатором
+        this.editorState.connections = this.editorState.connections.filter(connection => connection.id !== connectionIdToRemove);
         updateLocalStorage(this.editorState);
 
         console.log(
@@ -186,57 +233,63 @@ return context;
     });
 
    this.editor.addPipe(context => {
-    if ( this.localStorageLoad ){
-      return context;
-      }
-
     if (context.type === "connectioncreate") {
         const outputId = context.data.sourceOutput
-     
+      console.log(outputId)
+      //когда кликаю на output должен проверить входит ли он в инпут, если нет, ты вызвать создание ноды, и сделать инпут в нее
+      //это не из селектед, а из того output.id  которой я беру 
+      // возможно оутпут будет не из ноды а из ее элемента.(контрола)
       const connections = this.editor.getNodes()
       const serializedData = JSON.stringify(this.editor);
-      const nodes = this.editor.getNodes()
 
+
+      const nodes = this.editor.getNodes()
+      // setTimeout(() => {
+      //   if(nodes){
+      //     // console.log(nodes)
+      //     // console.log(serializedData)
+      //   }
+      // }, 10, );
+      
     }
     
     return context
   })
   this.connection.addPipe(context => {
-    if ( this.localStorageLoad ){
-      return context;
-      }
     if (context.type === 'connectionpick') { // when the user clicks on the socket
+// тут нужно придумать что бы то место откуда конекшн пик (пока в уме)
         console.log(context.data.socket.key )
         console.log(context.data.socket.nodeId)
         this.socketNodeId = context.data.socket.nodeId;
         this.socketKey = context.data.socket.key;
-      
+        //сделать перменную ноды, и ее конекшена
+        //       await this.editor.addConnection(new ClassicPreset.Connection(previousNode, "Output", node, "Input"));
+        //функция внутри создания ноды
+        //потом в конекшин дроп - очистить значение скорее через 10мсек
+      //в этой функции указать в первом значении эту ноду и ее конекшн - там где оутпут, будет имя конекшена
     }
-
-    if (context.type === 'connectiondrop') { 
-      if (!context.data.socket) { 
+    if (context.type === 'connectiondrop') { // when the user clicks on the socket or any area
+      if (!context.data.socket) { // Если нет активного соединения
         console.log(context.data.created.valueOf())
         
         const startNode = this.editor.getNode(this.socketNodeId)
         const connectionsSoket = this.editor.getConnections();
         console.log(connectionsSoket)
-    
+       //короче сюда нужно добавить логику, что если сделал конект то заного лкацнуть на Оутпут нельзя. чтоб не делать Мультиконектов где они стоят false
+       //в эту же логику нужно добавить метод который в компоненте при установке связи будет добавлять кнопку Делете - этой самой связли,
+       //и вот когда delete будет отрабатывать то его метод будет снова делать актиной сокет оутпута.
+
+       //получается. сначала мне нужно сделать новый контрол, который будет в себе содержать сокет..
         if(startNode.hasOutput(this.socketKey) ){
           this.addNewNode();
-          console.log(this.editor.getConnections())
 
         }
-        else{
-          console.log("нет такого output")
-        }
-        
-        // updateLocalStorage(this.editorState);
-
+        // this.socketNodeId = "";
+        // this.socketKey = "";
       }
     }
     return context
   })
-
 
     return () => this.area.destroy();
   }
@@ -252,12 +305,14 @@ return context;
 
 
               const CustomOutput =  new ClassicPreset.Output(new OutputSocket(), "я добавил динамично", false)
-                    
+
               const outputsJson =  JSON.stringify(CustomOutput)
               const outputsObject = JSON.parse(outputsJson);
               console.log(outputsObject)
               const nodeToUpdate = this.editorState.nodes.find(node => node.id === selectedNode.id);
-
+              // {socket: {…}, label: 'я добавил динамично', multipleConnections: false, id: '76effbeddd5eba2f'} this
+              // {socket: {…}, label: 'defind', multipleConnections: false, id: 'aa78d02ee7ad465b'} another
+              //  console.log(outputsObject.output.socket) 
               if (nodeToUpdate) {
                 const nodePort = new NodePort();
                 nodePort.id = outputsObject.id;
@@ -274,269 +329,308 @@ return context;
               console.log(CustomOutput)
     
 
-    selectedNode.addOutput( OutputName, CustomOutput); //сокет имеет уникальный нейм или кей поэтому при создании сокета
+    selectedNode.addOutput(OutputName, CustomOutput); //сокет имеет уникальный нейм или кей поэтому при создании сокета
     this.area.update("node", selectedNode.id);
     updateLocalStorage(this.editorState);
 
   }
   
   private async loadFromNodeData (){
-  
-  this.localStorageLoad = true;      
 
+    // const nodesDataLocal = localStorage.getItem('editorNodes');
     const nodesDataLocal = localStorage.getItem('editorState');
-
-    if (nodesDataLocal) {
-      const data = JSON.parse(nodesDataLocal);
-      const nodesData = data.nodes;
-      const connectionsData = data.connections;
-
-      for (const nodeData of nodesData) {
-        const node = this.nodeCreatorService.createCustomNode(this.socket);
-        node.id = nodeData.id;
-        node.label = nodeData.id;
-
-        const controlsObject: { [id: string]: ClassicPreset.Control } = {};
-        if (nodeData.controls) {
-          for (const control of nodeData.controls) {
-            let controlInstance: ClassicPreset.Control;
-            switch (control.type) {
-              case 'text':
-                controlInstance = new TextControl(control.value);
-                break;
-              case 'image':
-                controlInstance = new ImageControl(control.value);
-                break;
-              case 'delete':
-                controlInstance = new ButtonControl('delete', 'delete', () => {
-                  const connectionsToRemove = this.editor.getConnections().filter((connection) =>
-                    connection.source === node.id || connection.target === node.id
-                  );
-                  connectionsToRemove.forEach((connection) => this.editor.removeConnection(connection.id));
-                  this.area.removeNodeView(node.id);
-                  const nodeState = this.editorState.nodes.find((n) => n.id === node.id);
-                  const index = this.editorState.nodes.findIndex((n) => n.id === nodeState!.id);
-                  if (index !== -1) {
-                    this.editorState.nodes.splice(index, 1);
-                  }
-                  this.editor.removeNode(node.id);
-                  updateLocalStorage(this.editorState);
-                });
-                break;
-              default:
-                controlInstance = new ClassicPreset.Control();
-                break;
-            }
-            controlsObject[control.id!] = controlInstance;
+    const data = JSON.parse(nodesDataLocal!);
+    const nodesData = data.nodes;
+    console.log(nodesDataLocal)
+   
+    const nodesData1 = [
+      
+      {
+        "id": "3fa1e6c619ff9553",
+        "label": "3fa1e6c619ff9553",
+        "selected": false,
+        "botType": "",
+        "inputs": {
+          "id": "b02703f769d5508c",
+          "multipleConnections": true,
+          "label": "",
+          "socket": "socket"
+        },
+        "outputs": [
+          {
+            "id": "8facbe9d967aac77",
+            "multipleConnections": false,
+            "label": "defind",
+            "socket": "socket"
+          },
+          {
+            "id": "009f7313236a76f7",
+            "multipleConnections": false,
+            "label": "defind",
+            "socket": "socket"
           }
-        }
+        ],
+        "x": 189.1875,
+        "y": 325.2109375,
+        "controls": [
+          {
+            "id": "b5a397300fd05579",
+            "type": "delete",
+            "value": ""
+          },
+          {
+            "id": "c112c43261a3b803",
+            "type": "text",
+            "value": "123"
+          }
+        ]
+      },
+      {
+        "id": "377e4057d104d4be",
+        "label": "377e4057d104d4be",
+        "selected": false,
+        "botType": "",
+        "inputs": {
+          "id": "5d4b7512f363d261",
+          "multipleConnections": true,
+          "label": "",
+          "socket": "socket"
+        },
+        "outputs": [
+          {
+            "id": "3c5097069e1fb62a",
+            "multipleConnections": false,
+            "label": "defind",
+            "socket": "socket"
+          },
+          {
+            "id": "07b4fefdc3c7ebc3",
+            "multipleConnections": false,
+            "label": "defind",
+            "socket": "socket"
+          }
+        ],
+        "x": 469.52734375,
+        "y": 317.41015625,
+        "controls": [
+          {
+            "id": "4f05172b733f34a3",
+            "type": "delete",
+            "value": ""
+          },
+          {
+            "id": "3a9ced27044d082f",
+            "type": "text",
+            "value": "234"
+          }
+        ]
+      },
+      {
+        "id": "f140aecd63f59b5b",
+        "label": "f140aecd63f59b5b",
+        "selected": false,
+        "botType": "",
+        "inputs": {
+          "id": "450f9c6135f910a4",
+          "multipleConnections": true,
+          "label": "",
+          "socket": "socket"
+        },
+        "outputs": [
+          {
+            "id": "b953946e7e01c3b6",
+            "multipleConnections": false,
+            "label": "defind",
+            "socket": "socket"
+          },
+          {
+            "id": "9c7a5d6a24bc52d9",
+            "multipleConnections": false,
+            "label": "defind",
+            "socket": "socket"
+          }
+        ],
+        "x": 636.6953125,
+        "y": 147.0390625,
+        "controls": [
+          {
+            "id": "5a82fc264bbce4f7",
+            "type": "delete",
+            "value": ""
+          },
+          {
+            "id": "df14346281a8e966",
+            "type": "text",
+            "value": "345"
+          }
+        ]
+      }
+    ];
+console.log(nodesData)
 
-        const outputsObject: { [id: string]: ClassicPreset.Output<ClassicPreset.Socket> } = {};
-        for (const output of nodeData.outputs) {
-          let outputInstance: ClassicPreset.Output<ClassicPreset.Socket>;
-          switch (output.socket) {
-            case 'socket':
-              outputInstance = new ClassicPreset.Output(this.socket, output.label, output.multipleConnections);
-              // node.addOutput(output.socketKey, outputInstance)
-              console.log(output.socketKey)
-              break;
-            case 'Action':
-              outputInstance = new ClassicPreset.Output(new OutputSocket(), output.label, output.multipleConnections);
-              console.log(output.socketKey)
 
+    nodesData.forEach( async (nodeData: NodeState) => {
+      const node = this.nodeCreatorService.createCustomNode(this.socket);
+      const nodeId = nodeData.id
+      node.id = nodeId
+      node.label = nodeId
+
+      const controlsObject: { [id: string]: ClassicPreset.Control } = {};
+      if( nodeData.controls ) {
+      nodeData.controls.forEach(control => {
+          let controlInstance: ClassicPreset.Control;
+    
+          switch (control.type) {
+            case 'text':
+              controlInstance = new TextControl(control.value);
               break;
+            case 'image':
+              controlInstance = new ImageControl(control.value);
+              break;
+            case 'delete':
+              controlInstance = new ButtonControl("delete", "delete", () => {
+                console.log("Кнопка нажата"); //не вижу консоль (вижу, упдейт спустя 30 минут)
+                // this.area.removeNodeView(selectedNode.id) //можно было бы вызвать метод DeleteNode но он удалит не эту ноду, а ту которая будет выделена.
+                                                  //у этой ноды свой selectedNode.id константа у каждого метода своя.
+               const connectionsToRemove = this.editor.getConnections().filter(connection => 
+                connection.source === node.id || connection.target === node.id
+              );
+        
+              connectionsToRemove.forEach(connection => this.editor.removeConnection(connection.id));
+        
+              // Удаление ноды из области редактора
+              this.area.removeNodeView(node.id);
+              const nodeState = this.editorState.nodes.find(n => n.id === node.id);
+
+              // nodeState //тут удаляю из Стейта ноду внутри метода delete 
+              const index = this.editorState.nodes.findIndex(n => n.id === nodeState!.id);         
+
+            if (index !== -1) {
+                this.editorState.nodes.splice(index, 1);
+                // updateLocalStorage(this.editorState);
+
+            }
+        
+              // Удаление ноды из редактора
+              this.editor.removeNode(node.id);
+              updateLocalStorage(this.editorState);
+
+              });
+              break;
+            // Добавьте дополнительные кейсы для других типов, если необходимо
+            default:
+              controlInstance = new ClassicPreset.Control();
+              break;
+          }
+
+          controlsObject[control.id!] = controlInstance;
+      });}
+
+      const OutputsObject: { [id: string]: ClassicPreset.Output<ClassicPreset.Socket> } = {};
+
+      nodeData.outputs.forEach(output =>{
+        let outputInstance: ClassicPreset.Output<ClassicPreset.Socket>;
+      
+        switch (output.socket) {
+          case 'socket':
+            outputInstance = new ClassicPreset.Output(this.socket, output.label, output.multipleConnections);
+            break;
+          case 'Action':
+            outputInstance = new ClassicPreset.Output(new OutputSocket(), output.label, output.multipleConnections);
+            break;
             default:
               outputInstance = new ClassicPreset.Output(this.socket, output.label, output.multipleConnections);
-              console.log(output.socketKey)
-
               break;
-          }
-          outputsObject[output.socketKey] = outputInstance;
         }
-        node.outputs = outputsObject;
-
+        OutputsObject[output.id] = outputInstance;
         
-        //переписать форич добавть конекты, к каждому добавить новый оутпут если нейм сокет то класик пресет
-        //если актион то отупут сокет
+        ;})
 
-        node.controls = controlsObject;
+       
+         
 
-        // console.log(outputsObject)
-        await this.editor.addNode(node);
+      node.outputs = OutputsObject;
+      node.controls = controlsObject;
+      console.log(typeof(node.id))
+      // node.id = nodeData.id
+      // console.log(typeof(nodeState?.id))
+      // node.outputs = nodeData.outputs бля у меня при создании не все попадают в стейт а еще нужно добавленніе добавлять.
 
-        const areaX = nodeData.x;
-        const areaY = nodeData.y;
-        await this.area.translate(node.id, { x: areaX, y: areaY });
+      // test add node from state to editor and after to state
 
-        this.editorState.nodes.push(nodeData);
-      }
-
-      for (const connectionData of connectionsData) {
-        const sourceNode = this.editor.getNode(connectionData.source);
-        const targetNode = this.editor.getNode(connectionData.target);
-        if (sourceNode && targetNode) {
-          const newConnection = new ClassicPreset.Connection(
-            sourceNode,
-            connectionData.sourceOutput,
-            targetNode,
-            connectionData.targetInput
-          );
-          this.editor.addConnection(newConnection);
-          this.editorState.connections.push(newConnection);
-        }
-      }
-    } 
-
-    else {
-      
-      const node = this.nodeCreatorService.createCustomNode(this.socket);
-      const nodeState = new NodeState();
-      node.id = "initial-node"
-      node.label = node.id;
-      nodeState.id = node.id;
-      nodeState.label = node.label;
+      //
     
-      const inputs = node.inputs;
-      const inputJson =  JSON.stringify(inputs)
-      const inputObject = JSON.parse(inputJson);
-      const inputsId = inputObject.Input.id;
-      const multipleConnectionsInput = inputObject.Input.multipleConnections;
-
-      nodeState.inputs.id = inputsId
-      nodeState.inputs.multipleConnections = multipleConnectionsInput
-      const outputs = node.outputs; 
-      const outputsJson =  JSON.stringify(outputs)
-      const outputsObject = JSON.parse(outputsJson);
-      console.log(outputsObject)
-      console.log(outputsJson)
-  
-      for (const key in outputsObject) {
-        if (outputsObject.hasOwnProperty(key)) {
-            const output = outputsObject[key];
-            console.log(output)
-            const nodePort = new NodePort();
-            const ousok = output.socket.name
-            console.log(ousok)
-            nodePort.id = output.id;
-            nodePort.multipleConnections = output.multipleConnections;
-            nodePort.label = output.label;
-            // Добавление каждого выхода в массив nodeState.outputs
-            nodeState.outputs.push(nodePort);
-        }
-    }
-
-   
-
-      
-      // nodeState.botType = 'telegram';
-      this.editorState.nodes.push(nodeState);
-      this.nodes = [...this.nodes, node];
-
-      await this.editor.addNode(node);
-      
-    }
-
-    
-    this.localStorageLoad = false;   
+     await this.editor.addNode(node)
+      const areaX = nodeData.x;
+      const areaY = nodeData.y;
+     await this.area.translate(node.id, { x: areaX, y: areaY });
+     this.editorState.nodes.push(nodeData); // походу вот эта вещь повзоялет не перезаписывать стейт, а типа пушить туда агаин
+      //тут нужно сделать addNewNode(эта нода, что бы  я ее передал аргументом) а там изменить процесс создания
+    });
   
   }
+  //nodestate - get node selectednode
+    //const nodePort = new nodeport
+    //          nodeState.outputs.push(nodePort);
+    // классик выглядит так 
+    // Output {socket: Socket, label: 'defind', multipleConnections: false, id: 'ba5520077948e402'}
+    //кастом выглядит так
+    // Output {socket: OutputSocket, label: 'я добавил динамично', multipleConnections: false, id: '53edbbf51079a060'}
 
-  public async addNewNode() { 
+  public async addNewNode() { // нужно сделать метод добавления в стейт, а при криет будет вызываться метод addNewNode который будет постить на стол
     const node = this.nodeCreatorService.createCustomNode(this.socket);
-    if (!node || !this.socket) {
-      console.error('Failed to create node or socket is null');
-      return;
-    }
-
     const nodeState = new NodeState();
+
     nodeState.id = node.id;
     nodeState.label = node.label;
-
     const inputs = node.inputs;
-    const inputJson = JSON.stringify(inputs);
-    let inputObject;
-    try {
-      inputObject = JSON.parse(inputJson);
-    } catch (error) {
-      console.error('Failed to parse inputs JSON:', error);
-      return;
-    }
+    const inputJson =  JSON.stringify(inputs)
+    const inputObject = JSON.parse(inputJson);
+    const inputsId = inputObject.Input.id;
+    const multipleConnectionsInput = inputObject.Input.multipleConnections;
 
-    if (!inputObject || !inputObject.Input) {
-      console.error('Input object or Input property is missing');
-      return;
-    }
-
-    const { id: inputsId, multipleConnections: multipleConnectionsInput } = inputObject.Input;
-    nodeState.inputs.id = inputsId;
-    nodeState.inputs.multipleConnections = multipleConnectionsInput;
+    nodeState.inputs.id = inputsId
+    nodeState.inputs.multipleConnections = multipleConnectionsInput
 
     const outputs = node.outputs; 
-    let outputsObject;
-    try {
-      const outputsJson = JSON.stringify(outputs);
-      outputsObject = JSON.parse(outputsJson);
-    } catch (error) {
-      console.error('Failed to parse outputs JSON:', error);
-      return;
-    }
-
-    if (!outputsObject) {
-      console.error('Outputs object is missing');
-      return;
-    }
+    const outputsJson =  JSON.stringify(outputs)
+    const outputsObject = JSON.parse(outputsJson);
+    console.log(outputsObject)
+    console.log(outputsJson)
 
     for (const key in outputsObject) {
-      if (Object.prototype.hasOwnProperty.call(outputsObject, key)) {
-        const output = outputsObject[key];
-        const nodePort = new NodePort();
-        const ousok = output.socket?.name;
-        if (!ousok) {
-          console.error('Socket name is missing for output:', key);
-          continue;
-        }
-        nodePort.id = output.id;
-        nodePort.multipleConnections = output.multipleConnections;
-        nodePort.label = output.label;
-        nodeState.outputs.push(nodePort);
+      if (outputsObject.hasOwnProperty(key)) {
+          const output = outputsObject[key];
+          console.log(output)
+          const nodePort = new NodePort();
+          const ousok = output.socket.name
+          console.log(ousok)
+          nodePort.id = output.id;
+          nodePort.multipleConnections = output.multipleConnections;
+          nodePort.label = output.label;
+          // Добавление каждого выхода в массив nodeState.outputs
+          nodeState.outputs.push(nodePort);
       }
-    }
-
-    this.editorState.nodes.push(nodeState);
-    this.nodes.push(node);
-
-    try {
-      await this.editor.addNode(node);
-      if (this.nodes.length > 0) {  
-        const previousNode = this.editor.getNode(this.socketNodeId);
-        if (!previousNode) {
-          console.error('Previous node is missing');
-          return;
-        }
-        const newConnection = new ClassicPreset.Connection(previousNode, this.socketKey, node, "Input")
-        // const newStateConnection = new ConnectionState();
-        // newStateConnection.id = newConnection.id;
-        // newStateConnection.source = previousNode.id;
-        // newStateConnection.sourceOutput = this.socketKey;
-        // newStateConnection.target = node.id;
-
-        // this.editorState.connections.push(newStateConnection);
-        //  this.createConnection = newConnection;
-        await this.editor.addConnection(newConnection);
-        this.socketNodeId = "";
-        this.socketKey = "";
-      }
-      const areaX = this.area.area.pointer.x;
-      const areaY = this.area.area.pointer.y;
-      nodeState.x = areaX;
-      nodeState.y = areaY;
-      await this.area.translate(node.id, { x: areaX, y: areaY });
-    } catch (error) {
-      console.error('Failed to add node or establish connection:', error);
-    }
-
-    updateLocalStorage(this.editorState);
   }
+    this.editorState.nodes.push(nodeState);
+    this.nodes = [...this.nodes, node];
+
+    await this.editor.addNode(node);
+    if (this.nodes.length > 0) {  
+      const previousNode = this.editor.getNode(this.socketNodeId)
+      // Устанавливаем соединение между отпут нодой и новой нодой
+      await this.editor.addConnection(new ClassicPreset.Connection(previousNode, this.socketKey, node, "Input"));
+      this.socketNodeId = "";
+        this.socketKey = "";
+  }
+          const areaX = this.area.area.pointer.x;
+          const areaY = this.area.area.pointer.y;
+          nodeState.x = areaX;
+          nodeState.y = areaY;
+          await this.area.translate(node.id, { x: areaX, y: areaY });
+
+          updateLocalStorage(this.editorState);
+          }
   public async addControl() {  //Пример контрола по идее на каждый "обькт " свой
     const node = this.editor.getNodes().filter(node => node.selected) //наверное учитывая что в списке selected может быть 
                                                                       // максимум 1 нода есть более простой способ ее получить. я его не нашел.
@@ -611,8 +705,6 @@ return context;
 
       this.area.update("control", selectedNode.id)
       this.area.update('node', node[0].id); //эта штука обновляет нужно указывать что.
-      } else {
-        console.log("Нельзя добавить кнопку на initial-node ноду")
       }
       updateLocalStorage(this.editorState);
 
@@ -703,4 +795,3 @@ public async addTextBoxComponent() {
 
 
 }
-
