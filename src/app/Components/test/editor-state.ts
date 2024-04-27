@@ -4,6 +4,9 @@ export class EditorState {
 }
 
 export class NodeState {
+    connections(connections: any) {
+      throw new Error("Method not implemented.");
+    }
     public id: string = '';
     public label: string = '';
     public selected: boolean = false;
